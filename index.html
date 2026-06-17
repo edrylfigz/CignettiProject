@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SunPower Direct — Quality Initiative FPY Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;min-height:100vh;padding:1.5rem}
+.dash{max-width:1100px;margin:0 auto;background:#fff;border-radius:12px;padding:1.5rem;border:0.5px solid #e0dfd8}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:0.75rem;border-bottom:0.5px solid #e0dfd8;margin-bottom:0.75rem}
+.hdr h1{font-size:16px;font-weight:500;color:#1a1a18}
+.hdr p{font-size:11px;color:#888780;margin-top:2px}
+.badge{background:#0F6E56;color:#fff;font-size:11px;padding:3px 12px;border-radius:20px;white-space:nowrap;font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:0.75rem}
+.kpi{background:#f5f5f3;border-radius:8px;padding:10px 12px}
+.kpi-lbl{font-size:10px;color:#888780;margin-bottom:3px}
+.kpi-val{font-size:22px;font-weight:500;line-height:1.1}
+.kpi-sub{font-size:10px;color:#b4b2a9;margin-top:2px}
+.v-red{color:#E24B4A}.v-amb{color:#BA7517}.v-grn{color:#1D9E75}
+.nav{display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;flex-wrap:wrap}
+.nb{font-size:11px;padding:5px 12px;border-radius:20px;border:0.5px solid #ccc;background:transparent;color:#5f5e5a;cursor:pointer;white-space:nowrap;line-height:1.4;font-family:inherit}
+.nb:hover{background:#f0efea}
+.nb.on{background:#185FA5;border-color:#185FA5;color:#fff}
+.cc{display:flex;align-items:center;gap:6px;margin-left:auto}
+.cb{width:28px;height:28px;border-radius:50%;border:0.5px solid #ccc;background:transparent;color:#5f5e5a;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;padding:0}
+.cb:hover{background:#f0efea}
+.cb.play{background:#185FA5;border-color:#185FA5;color:#fff}
+.sc{font-size:11px;color:#888780;min-width:36px;text-align:center}
+.slide{display:none}
+.slide.on{display:block}
+.stitle{font-size:11px;font-weight:500;color:#888780;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:0.5rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#fff;border:0.5px solid #e0dfd8;border-radius:12px;padding:14px}
+.card h3{font-size:12px;font-weight:500;margin-bottom:2px;color:#1a1a18}
+.card .sub{font-size:10px;color:#888780;margin-bottom:10px}
+.cw{position:relative}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10px;color:#888780}
+.leg span{display:flex;align-items:center;gap:3px}
+.ld{width:10px;height:3px;border-radius:1px;display:inline-block}
+.ll{width:14px;height:0;border-top:2px solid #1D9E75;display:inline-block}
+.ldash{width:14px;height:0;border-top:2px dashed #E24B4A;display:inline-block}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{font-size:10px;font-weight:500;color:#888780;text-align:left;padding:6px 8px;border-bottom:0.5px solid #e0dfd8;white-space:nowrap;background:#fafaf8}
+.tbl td{padding:6px 8px;border-bottom:0.5px solid #e0dfd8;vertical-align:middle;color:#2c2c2a}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafaf8}
+.pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.pg{background:#EAF3DE;color:#3B6D11}
+.pr{background:#FCEBEB;color:#A32D2D}
+.pa{background:#FAEEDA;color:#854F0B}
+.pi{background:#f0efea;color:#5f5e5a}
+.andon-note{font-size:10px;color:#1D9E75;margin-top:6px;padding:4px 8px;background:#E1F5EE;border-radius:6px}
+.footer{margin-top:1rem;padding-top:0.75rem;border-top:0.5px solid #e0dfd8;font-size:10px;color:#b4b2a9;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+@media(max-width:700px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .row2{grid-template-columns:1fr}
+  .hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .nb{font-size:10px;padding:4px 8px}
+}
+</style>
+</head>
+<body>
+
+<div class="dash">
+<h2 class="sr-only">SunPower Direct Quality Initiative FPY Dashboard — Figures 1 through 7, Work Weeks 14–23 2026</h2>
+
+<div class="hdr">
+  <div>
+    <h1>SunPower Direct — Quality Initiative FPY = 100%</h1>
+    <p>Memo SSB-217D &nbsp;·&nbsp; Author: SSB &nbsp;·&nbsp; Data through WW23 2026 &nbsp;·&nbsp; Target: Zero Defects</p>
+  </div>
+  <span class="badge">FPY TARGET 100%</span>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-lbl">Design FDC S4</div><div class="kpi-val v-red">73%</div><div class="kpi-sub">WW23 — Spec 10470</div></div>
+  <div class="kpi"><div class="kpi-lbl">SCV S10</div><div class="kpi-val v-amb">92%</div><div class="kpi-sub">WW23 — Spec 10496</div></div>
+  <div class="kpi"><div class="kpi-lbl">Install M1</div><div class="kpi-val v-grn">100%</div><div class="kpi-sub">WW23 — Spec 12285</div></div>
+  <div class="kpi"><div class="kpi-lbl">FIV S14</div><div class="kpi-val v-red">72%</div><div class="kpi-sub">WW23 — Spec 12807</div></div>
+  <div class="kpi"><div class="kpi-lbl">Activation M2</div><div class="kpi-val v-red">61%</div><div class="kpi-sub">WW23 — Spec 12445</div></div>
+</div>
+
+<div class="nav">
+  <button class="nb on" onclick="go(0)">Fig 1 — Process map</button>
+  <button class="nb" onclick="go(1)">Fig 2 — Design FDC (S4)</button>
+  <button class="nb" onclick="go(2)">Fig 3 — SCV (S10)</button>
+  <button class="nb" onclick="go(3)">Fig 4 — Install M1</button>
+  <button class="nb" onclick="go(4)">Fig 5 — FIV S14</button>
+  <button class="nb" onclick="go(5)">Fig 6 — Activation M2</button>
+  <button class="nb" onclick="go(6)">Fig 7 — New Homes</button>
+  <div class="cc">
+    <button class="cb" onclick="prev()" aria-label="Previous"><i class="ti ti-chevron-left"></i></button>
+    <span class="sc" id="sc">1 / 7</span>
+    <button class="cb" onclick="nxt()" aria-label="Next"><i class="ti ti-chevron-right"></i></button>
+    <button class="cb play" id="pb" onclick="tog()" aria-label="Auto-cycle"><i class="ti ti-player-play" id="pi"></i></button>
+  </div>
+</div>
+
+<!-- SLIDE 0 — Fig 1 -->
+<div class="slide on" id="s0">
+  <div class="stitle">Figure 1 — SunPower Direct processes · target FPY = 100%</div>
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>T Level</th><th>Stage</th><th>Owner</th><th>Milestone 1 → Milestone 2</th><th>Spec L2</th><th>Spec L3</th><th>Latest FPY</th></tr></thead>
+      <tbody id="tb1"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 1 — Fig 2 -->
+<div class="slide" id="s1">
+  <div class="stitle">Figure 2 — Design FDC: S4 FPY &amp; Pareto (Salesforce data)</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 2A — SPWR Direct: FDC FPY</h3>
+      <div class="sub">WW18–23 2026 &nbsp;·&nbsp; Owner: SGS &nbsp;·&nbsp; QA: DJF &nbsp;·&nbsp; Spec 10470 &nbsp;·&nbsp; RCCA 235, D1 (OPEN)</div>
+      <div class="cw" style="height:200px"><canvas id="c2a" role="img" aria-label="Design FDC S4 FPY WW18-23: 82% 74% 72% 73% 71% 73%">FPY per work week: 82,74,72,73,71,73 percent.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+        <span>Volume: 117·104·119·124·118·166</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 2B — Design FDC Pareto</h3>
+      <div class="sub">Top defects WW18–23 &nbsp;·&nbsp; Spec L2: 12777 &nbsp;·&nbsp; Spec L3: 10470</div>
+      <div class="cw" style="height:200px"><canvas id="c2b" role="img" aria-label="FDC Pareto: Missing Photos 20, UB Incomplete 18, Incomplete Photos 5, HOI Incomplete 1">Defects: Missing Photos 20, UB Incomplete 18, Incomplete Photos 5, HOI Incomplete 1.</canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Count</span><span><span class="ld" style="background:#BA7517;height:2px;width:14px"></span>Cumulative %</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — Fig 3 -->
+<div class="slide" id="s2">
+  <div class="stitle">Figure 3 — SCV: S10 FPY &amp; Pareto (Corp QA Audit)</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 3A — SCV First Pass Yield</h3>
+      <div class="sub">WW02–23 2026 &nbsp;·&nbsp; Spec 10496 &nbsp;·&nbsp; RCCA 188, D6 &nbsp;·&nbsp; Data: TGM/ZJW/EVV</div>
+      <div class="cw" style="height:200px"><canvas id="c3a" role="img" aria-label="SCV S10 FPY from WW02 73% recovering to 100% then dipping to 92% at WW23">Long FPY trend: WW02 73% to WW23 92%.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 3B — SCV Pareto</h3>
+      <div class="sub">WW19–23.6 &nbsp;·&nbsp; RCCA 195, D6 (OPEN) &nbsp;·&nbsp; Spec 10496</div>
+      <div class="cw" style="height:200px"><canvas id="c3b" role="img" aria-label="SCV Pareto: Funding Defect 11, Missing Photo 9, Electrical Defect 8, Permit Mismatch 5, Tilt Photo 1">Top defects: Funding Defect 11, Missing Photo 9, Electrical Defect 8.</canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Count</span><span><span class="ld" style="background:#BA7517;height:2px;width:14px"></span>Cumulative %</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — Fig 4 -->
+<div class="slide" id="s3">
+  <div class="stitle">Figure 4 — Install M1 (Corp QA with Light Reach) FPY &amp; Pareto</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 4A — Install M1 FPY</h3>
+      <div class="sub">WW18–23 2026 &nbsp;·&nbsp; Owner: KMM/AEP &nbsp;·&nbsp; Spec 12285 &nbsp;·&nbsp; RCCA 228, D4 (OPEN)</div>
+      <div class="cw" style="height:200px"><canvas id="c4a" role="img" aria-label="Install M1 FPY WW18-23: 64% 70% 69% 89% 100% 100% strong improvement after Andon Cord">FPY: 64,70,69,89,100,100 percent.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+        <span>Volume: 44·57·45·18·27·32</span>
+      </div>
+      <div class="andon-note">★ Andon Cord activated WW19 (SPEC 12285, RCCA 228) → lifted WW21 · Additional QA staff deployed WW22–23</div>
+    </div>
+    <div class="card">
+      <h3>Fig 4B — Install M1 Pareto</h3>
+      <div class="sub">WW19–23.6 &nbsp;·&nbsp; RCCA 228, D4 (OPEN) &nbsp;·&nbsp; Spec 12285</div>
+      <div class="cw" style="height:200px"><canvas id="c4b" role="img" aria-label="M1 Pareto: Plan Set Correction 7, Roof Photos 7, Production Modeling 4, Busbar Label 3, Electrical Photos 2, Missing Photos 2, Market Specific 1">Top defects: Plan Set Correction and Roof Photos tied at 7 each.</canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Count</span><span><span class="ld" style="background:#BA7517;height:2px;width:14px"></span>Cumulative %</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — Fig 5 -->
+<div class="slide" id="s4">
+  <div class="stitle">Figure 5 — Final Inspection Verification: S14 FPY &amp; Pareto</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 5A — FIV S14 FPY</h3>
+      <div class="sub">WW18–23 2026 &nbsp;·&nbsp; Owner: DZR &nbsp;·&nbsp; QA: TGM, ZJW &nbsp;·&nbsp; Spec 12807 &nbsp;·&nbsp; RCCA 187, D3 (OPEN)</div>
+      <div class="cw" style="height:200px"><canvas id="c5a" role="img" aria-label="FIV S14 FPY WW18-23: 76% 71% 75% 76% 71% 72% consistently well below target">FPY per week: 76,71,75,76,71,72 percent.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+        <span>Volume: 78·75·63·51·70·58</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 5B — FIV S14 Pareto</h3>
+      <div class="sub">WW20–23 &nbsp;·&nbsp; RCCA 187, D3 (OPEN) &nbsp;·&nbsp; Spec 12807 &nbsp;·&nbsp; QA: ZJW, TGM</div>
+      <div class="cw" style="height:200px"><canvas id="c5b" role="img" aria-label="FIV Pareto: Uncategorized 54, AHJ 29, Design 14, ET 13, Inspections 11, Permitting 6, Customer 6 and more">Dominated by Uncategorized 54 and AHJ requirements 29.</canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Count</span><span><span class="ld" style="background:#BA7517;height:2px;width:14px"></span>Cumulative %</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — Fig 6 -->
+<div class="slide" id="s5">
+  <div class="stitle">Figure 6 — Activation M2 (Corp QA with Light Reach) FPY &amp; Pareto</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 6A — Activation M2 FPY</h3>
+      <div class="sub">WW14–23 2026 &nbsp;·&nbsp; Owner: KMM/AEP &nbsp;·&nbsp; Spec 12445 &nbsp;·&nbsp; RCCA 234, D1 (OPEN)</div>
+      <div class="cw" style="height:200px"><canvas id="c6a" role="img" aria-label="M2 FPY WW14-23: 100% WW14-16, drop to 60% WW19-20, partial recovery 75% WW22, then 61% WW23">FPY: 100,100,100,80,100,60,60,62,75,61 percent.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+        <span>Volume: 4·8·10·15·7·10·20·21·4·28</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 6B — Activation M2 Pareto</h3>
+      <div class="sub">WW19–23 &nbsp;·&nbsp; RCCA 234, D1 (OPEN) &nbsp;·&nbsp; Spec 12445 &nbsp;·&nbsp; Owner: KMM/AEP</div>
+      <div class="cw" style="height:200px"><canvas id="c6b" role="img" aria-label="M2 Pareto: Commissioning Issue 13, Plan Set Correction 5, Other 3, PTO Letter 3, Electrical Install 3, Electrical Issue 2, Roof Photos 2, others 1 each">Commissioning Issue leads at 13.</canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Count</span><span><span class="ld" style="background:#BA7517;height:2px;width:14px"></span>Cumulative %</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — Fig 7 -->
+<div class="slide" id="s6">
+  <div class="stitle">Figure 7 — New Homes processes · target FPY = 100% (under review &amp; planning)</div>
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>T Level</th><th>Stage</th><th>Owner</th><th>Milestone 1 → Milestone 2</th><th>Spec L2</th><th>Spec L3</th><th>Latest FPY</th></tr></thead>
+      <tbody id="tb7"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  <span>SunPower Direct Quality Initiative &nbsp;·&nbsp; Memo SSB-217D &nbsp;·&nbsp; Confidential</span>
+  <span>Data source: Salesforce / Corp QA Audit &nbsp;·&nbsp; Author: EVV/RJG/JYH &nbsp;·&nbsp; Owner: ERF &nbsp;·&nbsp; Spec: 10009</span>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var BLU='#185FA5',BAR='rgba(55,138,221,0.20)',GRN='#1D9E75',RED='#E24B4A',AMB='#BA7517',BAR2='#2B6C8E';
+
+function combo(id,labs,fpy,vol){
+  var ctx=document.getElementById(id);
+  if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels:labs,datasets:[
+    {type:'bar',data:vol,backgroundColor:BAR,yAxisID:'v',order:3,borderRadius:2},
+    {type:'line',data:labs.map(function(){return 100;}),borderColor:GRN,borderWidth:1.5,borderDash:[],pointRadius:0,yAxisID:'y',order:0,tension:0},
+    {type:'line',data:labs.map(function(){return 97;}),borderColor:RED,borderWidth:1,borderDash:[5,3],pointRadius:0,yAxisID:'y',order:0,tension:0},
+    {type:'line',data:fpy,borderColor:BLU,backgroundColor:'rgba(24,95,165,0.06)',fill:true,pointBackgroundColor:BLU,pointRadius:4,pointHoverRadius:6,tension:0.25,yAxisID:'y',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(c){if(c.datasetIndex===3)return'FPY: '+c.raw+'%';if(c.datasetIndex===0)return'Vol: '+c.raw;return null;}}}},
+    scales:{
+      x:{ticks:{font:{size:9}},grid:{display:false}},
+      y:{min:0,max:115,ticks:{font:{size:9},callback:function(v){return v+'%';}},grid:{color:'rgba(0,0,0,0.05)'}},
+      v:{position:'right',ticks:{font:{size:9},color:'#b4b2a9'},grid:{display:false}}
+    }
+  }});
+}
+
+function pareto(id,labs,counts){
+  var ctx=document.getElementById(id);
+  if(!ctx)return;
+  var total=counts.reduce(function(a,b){return a+b;},0);
+  var cum=0,cumPct=counts.map(function(v){cum+=v;return Math.round(cum/total*100);});
+  new Chart(ctx,{type:'bar',data:{labels:labs,datasets:[
+    {type:'bar',data:counts,backgroundColor:BAR2,borderRadius:2,yAxisID:'y',order:2},
+    {type:'line',data:cumPct,borderColor:AMB,backgroundColor:'transparent',pointBackgroundColor:AMB,pointRadius:3,tension:0.3,yAxisID:'p',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      x:{ticks:{font:{size:9},maxRotation:38,autoSkip:false},grid:{display:false}},
+      y:{ticks:{font:{size:9}},grid:{color:'rgba(0,0,0,0.05)'}},
+      p:{position:'right',min:0,max:100,ticks:{font:{size:9},callback:function(v){return v+'%';}},grid:{display:false}}
+    }
+  }});
+}
+
+function initCharts(){
+  combo('c2a',['WW18','WW19','WW20','WW21','WW22','WW23'],[82,74,72,73,71,73],[117,104,119,124,118,166]);
+  pareto('c2b',['Missing Photos','UB Incomplete','Incomplete Photos','HOI Incomplete'],[20,18,5,1]);
+  combo('c3a',['WW02','WW03','WW04','WW05','WW06','WW07','WW08','WW09','WW10','WW11','WW12','WW13','WW14','WW15','WW16','WW17','WW18','WW19','WW20','WW21','WW22','WW23'],[73,79,78,84,93,95,91,100,100,94,100,100,100,100,100,100,100,95,100,100,95,92],[37,19,27,19,30,21,11,7,15,18,16,20,20,17,17,16,20,15,20,16,10,13]);
+  pareto('c3b',['Funding Defect','Missing Photo','Electrical Defect','Permit Mismatch','Tilt Photo'],[11,9,8,5,1]);
+  combo('c4a',['WW18','WW19','WW20','WW21','WW22','WW23'],[64,70,69,89,100,100],[44,57,45,18,27,32]);
+  pareto('c4b',['Plan Set Corr.','Roof Photos','Prod. Modeling','Busbar Label','Elec. Photos','Missing Photos','Market Specific'],[7,7,4,3,2,2,1]);
+  combo('c5a',['WW18','WW19','WW20','WW21','WW22','WW23'],[76,71,75,76,71,72],[78,75,63,51,70,58]);
+  pareto('c5b',['Uncat.','AHJ','Design','ET','Inspections','Permitting','Customer','Crew','FOT','ST','IP','Installs','Supply Chain','QC'],[54,29,14,13,11,6,6,4,4,3,2,2,1,1]);
+  combo('c6a',['WW14','WW15','WW16','WW17','WW18','WW19','WW20','WW21','WW22','WW23'],[100,100,100,80,100,60,60,62,75,61],[4,8,10,15,7,10,20,21,4,28]);
+  pareto('c6b',['Commissioning','Plan Set Corr.','Other','PTO Letter','Elec. Install','Elec. Issue','Roof Photos','Elec. Photos','Need PCS','Home Type'],[13,5,3,3,3,2,2,1,1,1]);
+}
+
+var D1=[
+  {t:'T0',s:'S1',o:'KXW/DJF',m:'Booking → Project Received',l2:'12885',l3:'10848',f:'i'},
+  {t:'T0',s:'S2',o:'SGS/DJF',m:'Project Received → Layout &amp; Upgrade Review',l2:'12777',l3:'12304',f:'i'},
+  {t:'T0',s:'S3',o:'SGS/DJF',m:'Layout &amp; Upgrade Review → Project Huddle',l2:'12777',l3:'12304',f:'i'},
+  {t:'T0',s:'S4',o:'SGS/DJF',m:'Project Huddle → FDC (Project Acceptance)',l2:'12777',l3:'10470',f:'73%'},
+  {t:'T1',s:'S5',o:'SGS/TGM',m:'Final Design Complete → Permit Pack Completed',l2:'12777',l3:'12385',f:'i'},
+  {t:'T1',s:'S6a',o:'PXA/DJF',m:'Permit Pack Completed → Request Permit',l2:'12759',l3:'10823',f:'100%'},
+  {t:'T1',s:'S6b',o:'PKN/EZD',m:'Permit Pack Completed → IXP1 Submission',l2:'12649',l3:'12460',f:'i'},
+  {t:'T1',s:'S7a',o:'PXA/DJF',m:'Request Permit → Permit Approved',l2:'12649',l3:'12556',f:'100%'},
+  {t:'T1',s:'S7b',o:'PKN/EZD',m:'IXP1 Submission → IXP1 Approval',l2:'12649',l3:'12556',f:'100%'},
+  {t:'T1',s:'S8',o:'SAH/DJF',m:'Permit Approved / IXP1 Approval → Ready To Schedule',l2:'12783',l3:'10961',f:'i'},
+  {t:'T1',s:'S9',o:'SAH/ZJW',m:'Ready To Schedule → Install Scheduled',l2:'12783',l3:'11819',f:'i'},
+  {t:'T1',s:'S10',o:'IPG/ZJW',m:'Install Scheduled → Substantial Completion Verified',l2:'12022',l3:'10496',f:'92%'},
+  {t:'T2',s:'S11',o:'BPK/RJG',m:'Substantial Completion Verified → M2 Submission',l2:'12022',l3:'12430',f:'100%'},
+  {t:'T2',s:'S12',o:'BPK/RJG',m:'M2 Submission → M2 Approved',l2:'12022',l3:'12430',f:'100%'},
+  {t:'T2',s:'S13',o:'DZR/ZJW',m:'Substantial Complete → Final Inspection Scheduled',l2:'12807',l3:'11001',f:'i'},
+  {t:'T2',s:'S14',o:'DZR/ZJW',m:'Final Inspection Scheduled → Final Inspection Verified',l2:'12807',l3:'10899',f:'72%'},
+  {t:'T3',s:'S15',o:'PKN/EZD',m:'Final Inspection Verified → Permission To Operate',l2:'12834',l3:'11143',f:'61%'},
+  {t:'T3',s:'S16',o:'MBC/TGM',m:'Permission To Operate → Grant PTO To Customer',l2:'13050',l3:'13049',f:'i'},
+];
+var D7=[
+  {t:'T0',s:'C1',o:'SFA/RJG',m:'Community Lead → Community Bid Request',l2:'12321',l3:'10508',f:'i'},
+  {t:'T0',s:'C2',o:'SFA/RJG',m:'Community Bid Request → Community Bid Review',l2:'12321',l3:'12507',f:'i'},
+  {t:'T0',s:'C3',o:'SFA/RJG',m:'Community Bid Review → Community Award',l2:'12321',l3:'12507',f:'i'},
+  {t:'T0',s:'C4',o:'MTO/TGM',m:'Community Award → Final Design Approved',l2:'11227',l3:'11463',f:'100%'},
+  {t:'T0',s:'C5',o:'MQT/TGM',m:'Final Design Approved → Production Trench',l2:'13051',l3:'12507',f:'i'},
+  {t:'T1',s:'L6',o:'RIH/TGM',m:'Production Trench → Lot Design Requested',l2:'13044',l3:'10549',f:'i'},
+  {t:'T1',s:'L7',o:'MTO/TGM',m:'Lot Design Requested → Lot Design Completed',l2:'11229',l3:'11466',f:'100%'},
+  {t:'T1',s:'L8',o:'JMN/ZJW',m:'Lot Design Completed → Lot Permit Approved',l2:'11287',l3:'10506',f:'i'},
+  {t:'T1',s:'L9',o:'RIH/ZJW',m:'Lot Permit Approved → Rough Wire',l2:'13044',l3:'10791',f:'i'},
+  {t:'T2',s:'L10',o:'RIH/TGM',m:'Rough Wire → Install',l2:'13044',l3:'10790',f:'i'},
+  {t:'T2',s:'L11',o:'ROS/TGM',m:'Installation → Job Close Out (JCO)',l2:'12752',l3:'10790',f:'100%'},
+  {t:'T3',s:'L12',o:'RIH/ZJW',m:'Job Close Out (JCO) → Final Permit Approved',l2:'13044',l3:'12327',f:'i'},
+  {t:'T4',s:'L13',o:'LKR/EZD',m:'Final Permit Approved → Permission To Operate',l2:'12281',l3:'10853',f:'100%'},
+  {t:'T5',s:'L14',o:'KAM/EZD',m:'Permission To Operate → Activation',l2:'13058',l3:'12152',f:'i'},
+  {t:'T0',s:'C15',o:'RIH/EZD',m:'Model Trench → Community Install Complete',l2:'13044',l3:'11971',f:'i'},
+  {t:'T4',s:'L20P',o:'AEP/RJG',m:'TPO Contract Signed → M1 Installation (Parallel)',l2:'12752',l3:'10724',f:'100%'},
+  {t:'T4',s:'L21P',o:'AEP/RJG',m:'M1 → M2 Activation (Parallel)',l2:'12752',l3:'10808',f:'100%'},
+];
+
+function pc(f){return f==='100%'?'pg':f==='i'?'pi':parseInt(f)>=90?'pa':'pr';}
+function pl(f){return f==='i'?'Investigating*':f;}
+
+function buildTbl(id,data){
+  var tb=document.getElementById(id);
+  if(!tb)return;
+  data.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r.t+'</td><td><strong>'+r.s+'</strong></td><td style="white-space:nowrap;color:#5f5e5a">'+r.o+'</td><td>'+r.m+'</td><td style="color:#888780">'+r.l2+'</td><td style="color:#888780">'+r.l3+'</td><td><span class="pill '+pc(r.f)+'">'+pl(r.f)+'</span></td>';
+    tb.appendChild(tr);
+  });
+}
+
+buildTbl('tb1',D1);
+buildTbl('tb7',D7);
+
+var cur=0,playing=false,timer=null,chartsInited=false;
+var slides=document.querySelectorAll('.slide');
+var nbts=document.querySelectorAll('.nb');
+
+function go(n){
+  slides[cur].classList.remove('on');
+  nbts[cur].classList.remove('on');
+  cur=n;
+  slides[cur].classList.add('on');
+  nbts[cur].classList.add('on');
+  document.getElementById('sc').textContent=(cur+1)+' / '+slides.length;
+  if(!chartsInited){chartsInited=true;initCharts();}
+}
+function nxt(){go((cur+1)%slides.length);}
+function prev(){go((cur-1+slides.length)%slides.length);}
+function tog(){
+  playing=!playing;
+  var ic=document.getElementById('pi'),pb=document.getElementById('pb');
+  if(playing){ic.className='ti ti-player-pause';pb.style.background='#A32D2D';pb.style.borderColor='#A32D2D';timer=setInterval(nxt,5500);}
+  else{ic.className='ti ti-player-play';pb.style.background='#185FA5';pb.style.borderColor='#185FA5';clearInterval(timer);}
+}
+
+setTimeout(function(){if(!chartsInited){chartsInited=true;initCharts();}},300);
+</script>
+</body>
+</html>
