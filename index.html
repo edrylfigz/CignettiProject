@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>QA Andon Dashboard</title>
+
   <style>
     body {
       margin: 0;
@@ -9,36 +10,32 @@
       overflow: hidden;
     }
 
-    iframe {
+    #viewer {
       width: 100vw;
       height: 100vh;
       border: none;
+    }
+
+    #header {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
     }
   </style>
 </head>
 
 <body>
-  <iframe id="viewer"></iframe>
 
-  <script>
-    let slide = 2; // start at slide 2
-    const totalSlides = 15; // adjust if needed
+<div id="header">QUALITY FPY ANDON DASHBOARD</div>
 
-    function loadSlide() {
-      document.getElementById("viewer").src =
-        `dashboard.pdf#page=${slide}&zoom=page-fit`;
-    }
+<iframe id="viewer"></iframe>
 
-    function nextSlide() {
-      slide++;
-      if (slide > totalSlides) {
-        slide = 2;
-      }
-      loadSlide();
-    }
+<script src="config.js"></script>
+<script src="script.js"></script>
 
-    loadSlide();
-    setInterval(nextSlide, 5000);
-  </script>
 </body>
 </html>
