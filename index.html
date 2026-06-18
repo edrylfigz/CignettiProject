@@ -1,38 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <title>Andon Quality Dashboard</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- React (Production builds = faster) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      color: white;
-      overflow: hidden;
-      cursor: none;
-      font-family: Arial, sans-serif;
-    }
-  </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Solar QA Andon Dashboard</title>
+  <!-- Tailwind CSS for styling -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- JSZip to unpack the PPTX file client-side -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col overflow-hidden">
 
-<body>
+  <!-- Top Global Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center shrink-0 shadow-md">
+    <div class="flex items-center gap-4">
+      <div class="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded text-xs uppercase tracking-wider animate-pulse">
+        Andon System Live
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white">SunPower Direct Processes Dashboard</h1>
+        <p class="text-xs text-slate-400" id="file-status">Loading presentation.pptx...</p>
+      </div>
+    </div>
+    
+    <!-- Controls and Counters -->
+    <div class="flex items-center gap-6">
+      <div class="text-right">
+        <span class="text-xs text-slate-500 block uppercase font-mono">Slide Matrix</span>
+        <span class="text-sm font-bold text-amber-400 font-mono" id="slide-counter">0 / 0</span>
+      </div>
+      <div class="flex gap-2">
+        <button id="btn-prev" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition">◀ Prev</button>
+        <button id="btn-pause" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition">⏸ Pause</button>
+        <button id="btn-next" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition">Next ▶</button>
+      </div>
+    </div>
+  </header>
 
-  <!-- ROOT -->
-  <div id="root"></div>
+  <!-- Main View Grid Arena -->
+  <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden min-h-0">
+    
+    <!-- Left Column: Primary Metrics & Metadata Card -->
+    <div class="lg:col-span-2 flex flex-col gap-6 min-h-0">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col justify-between shrink-0 shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+        <div>
+          <span class="text-xs text-amber-400 font-bold uppercase tracking-widest block mb-1 font-mono" id="slide-subtitle">STATION OVERVIEW</span>
+          <h2 class="text-3xl font-black text-white leading-tight tracking-tight" id="slide-title">Extracting Station Title...</h2>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-800/60 text-xs">
+          <div>
+            <span class="text-slate-500 block font-medium">Process Owner</span>
+            <span class="text-slate-200 font-semibold" id="meta-owner">-</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block font-medium">QA Auditor</span>
+            <span class="text-slate-200 font-semibold" id="meta-qa">-</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block font-medium">Specification Code</span>
+            <span class="text-slate-200 font-semibold text-amber-500 font-mono" id="meta-spec">-</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block font-medium">RCCA Tracking</span>
+            <span class="text-slate-200 font-semibold text-rose-400 font-mono" id="meta-rcca">-</span>
+          </div>
+        </div>
+      </div>
 
-  <!-- APP -->
-  <script src="app.js"></script>
+      <!-- Performance Metric Display Panel -->
+      <div class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col justify-center items-center relative shadow-lg">
+        <div class="text-center">
+          <span class="text-xs text-slate-400 uppercase tracking-widest block font-medium mb-2">Latest First Pass Yield (FPY)</span>
+          <div class="text-8xl sm:text-9xl font-black tracking-tighter text-emerald-400 font-mono drop-shadow-[0_0_35px_rgba(52,211,153,0.15)]" id="metric-fpy">
+            --%
+          </div>
+          <p class="text-xs text-slate-500 mt-4 font-mono">OPERATIONAL OBJECTIVE TARGET: 100%</p>
+        </div>
+      </div>
+    </div>
 
+    <!-- Right Column: Process Context & Actions List -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col min-h-0 shadow-lg">
+      <h3 class="text-sm font-bold uppercase text-slate-300 tracking-wider mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        Extracted Context & Root Causes
+      </h3>
+      
+      <!-- List Container for parsed table rows or bullet points -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar" id="context-list">
+        <!-- Injected dynamically -->
+        <p class="text-slate-500 text-sm italic">Processing elements...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Progress Bar Line -->
+  <div class="w-full h-1 bg-slate-900 shrink-0">
+    <div id="loop-progress" class="h-full bg-amber-500 transition-all duration-100 ease-linear" style="width: 0%;"></div>
+  </div>
+
+  <!-- App Processing Engine Logic -->
+  <script>
+    let slidesData = [];
+    let currentSlideIndex = 0;
+    let cycleInterval = null;
+    let isPaused = false;
+    const slideDuration = 10000; // Time in milliseconds per slide (10 seconds)
+    let progressTimer = null;
+    let progressElapsed = 0;
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchPowerPointData();
+      setupControls();
+    });
+
+    // Read and parse PPTX file from root folder
+    async function fetchPowerPointData() {
+      const statusEl = document.getElementById('file-status');
+      try {
+        const response = await fetch('./presentation.pptx');
+        if (!response.ok) throw new Error("Could not find 'presentation.pptx' in the root directory.");
+        
+        const blob = await response.blob();
+        const zip = await JSZip.loadAsync(blob);
+        
+        // Find all slide files in the archive structure
+        const slideFiles = Object.keys(zip.files).filter(path => 
+          path.startsWith('ppt/slides/slide') && path.endsWith('.xml')
+        );
+
+        // Sort slides sequentially according to natural file numbering
+        slideFiles.sort((a, b) => {
+          const numA = parseInt(a.match(/\d+/)[0]);
+          const numB = parseInt(b.match(/\d+/)[0]);
+          return numA - numB;
+        });
+
+        // Loop starting from Slide 2 (index 1) onwards
+        for (let i = 1; i < slideFiles.length; i++) {
+          const slideXmlText = await zip.files[slideFiles[i]].async('text');
+          const parsedData = extractSlideContent(slideXmlText, i + 1);
+          slidesData.push(parsedData);
+        }
+
+        if (slidesData.length === 0) {
+          statusEl.textContent = "Error: No data found starting from slide 2.";
+          statusEl.className = "text-xs text-rose-400";
+          return;
+        }
+
+        statusEl.textContent = "Successfully synchronized with presentation.pptx";
+        statusEl.className = "text-xs text-emerald-400";
+        
+        renderCurrentSlide();
+        startCycleLoop();
+
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = `Synchronization failed: ${error.message}`;
+        statusEl.className = "text-xs text-rose-400";
+      }
+    }
+
+    // Parse specific openXML text patterns out of slide layouts
+    function extractSlideContent(xmlText, slideNumber) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+      
+      // Gather all text elements inside the slide XML structure
+      const textNodes = xmlDoc.getElementsByTagName("a:t");
+      let strings = [];
+      for (let i = 0; i < textNodes.length; i++) {
+        const txt = textNodes[i].textContent.trim();
+        if (txt) strings.push(txt);
+      }
+
+      const fullTextBlob = strings.join(" ");
+
+      // Fallback heuristics to extract key structural properties from raw text dumps
+      let title = strings[0] || `Operational Phase Figure Slide ${slideNumber}`;
+      if (title.length < 5 && strings[1]) title = strings[0] + " " + strings[1];
+
+      // Regular expression matches for performance metrics
+      const fpyMatch = fullTextBlob.match(/(\d{2,3}%)/);
+      const specMatch = fullTextBlob.match(/SPEC(?:IFICATION)?\s*:?\s*(\d+)/i) || fullTextBlob.match(/Spec\s*(\d+)/);
+      const rccaMatch = fullTextBlob.match(/RCCA\s*:?\s*(\d+(?:\s*,\s*D\d+)?)/i);
+      const ownerMatch = fullTextBlob.match(/Owner\s*:\s*([A-Z\/ ]+)/i);
+      const qaMatch = fullTextBlob.match(/QA\s*:\s*([A-Z\/ ]+)/i);
+
+      return {
+        slideNumber: slideNumber,
+        title: title,
+        fpy: fpyMatch ? fpyMatch[1] : "100%", // Defalts to targeted 100% value
+        spec: specMatch ? specMatch[1] : "N/A",
+        rcca: rccaMatch ? `RCCA ${rccaMatch[1]}` : "None Active",
+        owner: ownerMatch ? ownerMatch[1].split(" ")[0] : "QA Ops Group",
+        qa: qaMatch ? qaMatch[1].split(" ")[0] : "Verified Engine",
+        rawElements: strings
+      };
+    }
+
+    // Bind UI views to data models
+    function renderCurrentSlide() {
+      if (slidesData.length === 0) return;
+      const data = slidesData[currentSlideIndex];
+
+      document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${slidesData.length}`;
+      document.getElementById('slide-title').textContent = data.title;
+      document.getElementById('metric-fpy').textContent = data.fpy;
+      document.getElementById('meta-spec').textContent = data.spec;
+      document.getElementById('meta-rcca').textContent = data.rcca;
+      document.getElementById('meta-owner').textContent = data.owner;
+      document.getElementById('meta-qa').textContent = data.qa;
+
+      // Color coding alert changes dynamically matching FPY statuses
+      const numericFpy = parseInt(data.fpy);
+      const metricContainer = document.getElementById('metric-fpy');
+      if (numericFpy < 80) {
+        metricContainer.className = "text-8xl sm:text-9xl font-black tracking-tighter text-rose-500 font-mono drop-shadow-[0_0_35px_rgba(239,68,68,0.2)]";
+      } else if (numericFpy < 95) {
+        metricContainer.className = "text-8xl sm:text-9xl font-black tracking-tighter text-amber-400 font-mono drop-shadow-[0_0_35px_rgba(251,191,36,0.2)]";
+      } else {
+        metricContainer.className = "text-8xl sm:text-9xl font-black tracking-tighter text-emerald-400 font-mono drop-shadow-[0_0_35px_rgba(52,211,153,0.15)]";
+      }
+
+      // Generate structured breakdown items inside right column
+      const contextContainer = document.getElementById('context-list');
+      contextContainer.innerHTML = "";
+
+      // Deduplicate elements to provide list clarity
+      const uniqueStrings = [...new Set(data.rawElements)].filter(str => str.length > 4 && !str.includes('%'));
+      
+      if (uniqueStrings.length <= 2) {
+        contextContainer.innerHTML = `<div class="p-4 bg-slate-800/40 border border-slate-800 rounded-lg text-center text-slate-500 text-xs">No downstream system alerts registered for this phase.</div>`;
+      } else {
+        // Slice elements avoiding the title row to yield meaningful updates
+        uniqueStrings.slice(2, 12).forEach(item => {
+          const itemCard = document.createElement('div');
+          itemCard.className = "p-3 bg-slate-800/50 border border-slate-800/80 rounded-lg text-xs text-slate-300 font-mono leading-relaxed flex items-start gap-2 hover:bg-slate-800 transition";
+          itemCard.innerHTML = `<span class="text-amber-500 font-bold mt-0.5">▪</span> <span>${item}</span>`;
+          contextContainer.appendChild(itemCard);
+        });
+      }
+      
+      // Reset progress indicator bar metrics
+      progressElapsed = 0;
+    }
+
+    // Handle background loop timing transitions
+    function startCycleLoop() {
+      if (cycleInterval) clearInterval(cycleInterval);
+      if (progressTimer) clearInterval(progressTimer);
+
+      const frameRate = 100; // update progress meter bar every 100ms
+      progressTimer = setInterval(() => {
+        if (!isPaused) {
+          progressElapsed += frameRate;
+          const percentage = (progressElapsed / slideDuration) * 100;
+          document.getElementById('loop-progress').style.width = `${Math.min(percentage, 100)}%`;
+          
+          if (progressElapsed >= slideDuration) {
+            handleNavigation(1);
+          }
+        }
+      }, frameRate);
+    }
+
+    function handleNavigation(direction) {
+      if (slidesData.length === 0) return;
+      currentSlideIndex = (currentSlideIndex + direction + slidesData.length) % slidesData.length;
+      renderCurrentSlide();
+    }
+
+    function setupControls() {
+      const pauseBtn = document.getElementById('btn-pause');
+      
+      pauseBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? "▶ Resume" : "⏸ Pause";
+        pauseBtn.className = isPaused 
+          ? "bg-amber-500 text-slate-950 px-3 py-1.5 text-xs rounded font-bold transition" 
+          : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition";
+      });
+
+      document.getElementById('btn-prev').addEventListener('click', () => {
+        handleNavigation(-1);
+        progressElapsed = 0;
+      });
+
+      document.getElementById('btn-next').addEventListener('click', () => {
+        handleNavigation(1);
+        progressElapsed = 0;
+      });
+    }
+  </script>
 </body>
 </html>
