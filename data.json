@@ -1,7 +1,0 @@
-{
-  "stations": [
-    { "name": "S4 Design FDC", "fpy": 73, "slides": [3, 4] },
-    { "name": "S10 SCV", "fpy": 92, "slides": [5, 6] }
-  ]
-}
-``
