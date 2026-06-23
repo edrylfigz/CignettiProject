@@ -1,412 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cignetti Dashboard - SunPower Quality Systems</title>
-  <!-- Tailwind CSS for scannable UI layout -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- JSZip to unpack the PPTX file client-side -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Chart.js to render the actual content of the graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SunPower Direct — Quality Initiative FPY Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;min-height:100vh;padding:1.5rem}
+.dash{max-width:1100px;margin:0 auto;background:#fff;border-radius:12px;padding:1.5rem;border:0.5px solid #e0dfd8}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:0.75rem;border-bottom:0.5px solid #e0dfd8;margin-bottom:0.75rem}
+.hdr h1{font-size:16px;font-weight:500;color:#1a1a18}
+.hdr p{font-size:11px;color:#888780;margin-top:2px}
+.badge{background:#0F6E56;color:#fff;font-size:11px;padding:3px 12px;border-radius:20px;white-space:nowrap;font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:0.75rem}
+.kpi{background:#f5f5f3;border-radius:8px;padding:10px 12px}
+.kpi-lbl{font-size:10px;color:#888780;margin-bottom:3px}
+.kpi-val{font-size:22px;font-weight:500;line-height:1.1}
+.kpi-sub{font-size:10px;color:#b4b2a9;margin-top:2px}
+.v-red{color:#E24B4A}.v-amb{color:#BA7517}.v-grn{color:#1D9E75}
+.nav{display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;flex-wrap:wrap}
+.nb{font-size:11px;padding:5px 12px;border-radius:20px;border:0.5px solid #ccc;background:transparent;color:#5f5e5a;cursor:pointer;white-space:nowrap;line-height:1.4;font-family:inherit}
+.nb:hover{background:#f0efea}
+.nb.on{background:#185FA5;border-color:#185FA5;color:#fff}
+.cc{display:flex;align-items:center;gap:6px;margin-left:auto}
+.cb{width:28px;height:28px;border-radius:50%;border:0.5px solid #ccc;background:transparent;color:#5f5e5a;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;padding:0}
+.cb:hover{background:#f0efea}
+.cb.play{background:#185FA5;border-color:#185FA5;color:#fff}
+.sc{font-size:11px;color:#888780;min-width:36px;text-align:center}
+.slide{display:none}
+.slide.on{display:block}
+.stitle{font-size:11px;font-weight:500;color:#888780;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:0.5rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#fff;border:0.5px solid #e0dfd8;border-radius:12px;padding:14px}
+.card h3{font-size:12px;font-weight:500;margin-bottom:2px;color:#1a1a18}
+.card .sub{font-size:10px;color:#888780;margin-bottom:10px}
+.cw{position:relative}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:10px;color:#888780}
+.leg span{display:flex;align-items:center;gap:3px}
+.ld{width:10px;height:3px;border-radius:1px;display:inline-block}
+.ll{width:14px;height:0;border-top:2px solid #1D9E75;display:inline-block}
+.ldash{width:14px;height:0;border-top:2px dashed #E24B4A;display:inline-block}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{font-size:10px;font-weight:500;color:#888780;text-align:left;padding:6px 8px;border-bottom:0.5px solid #e0dfd8;white-space:nowrap;background:#fafaf8}
+.tbl td{padding:6px 8px;border-bottom:0.5px solid #e0dfd8;vertical-align:middle;color:#2c2c2a}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafaf8}
+.pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.pg{background:#EAF3DE;color:#3B6D11}
+.pr{background:#FCEBEB;color:#A32D2D}
+.pa{background:#FAEEDA;color:#854F0B}
+.pi{background:#f0efea;color:#5f5e5a}
+.andon-note{font-size:10px;color:#A32D2D;margin-top:6px;padding:4px 8px;background:#FCEBEB;border-radius:6px;font-weight:500}
+.footer{margin-top:1rem;padding-top:0.75rem;border-top:0.5px solid #e0dfd8;font-size:10px;color:#b4b2a9;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+@media(max-width:700px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .row2{grid-template-columns:1fr}
+  .hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .nb{font-size:10px;padding:4px 8px}
+}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col overflow-hidden">
+<body>
 
-  <!-- Global Header Area -->
-  <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center shrink-0 shadow-md">
-    <div class="flex items-center gap-4">
-      <div class="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded text-xs uppercase tracking-wider animate-pulse">
-        Live
-      </div>
-      <div>
-        <h1 class="text-xl font-bold tracking-tight text-white">Cignetti Dashboard</h1>
-        <p class="text-xs text-slate-400" id="file-status">Loading presentation.pptx...</p>
-      </div>
-    </div>
-    
-    <!-- Controls and Slide Matrix Trackers -->
-    <div class="flex items-center gap-6">
-      <div class="text-right">
-        <span class="text-xs text-slate-500 block uppercase font-mono">Slide Loop Index</span>
-        <span class="text-sm font-bold text-amber-400 font-mono" id="slide-counter">0 / 0</span>
-      </div>
-      <div class="flex gap-2">
-        <button id="btn-prev" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition font-mono">◀ PREV</button>
-        <button id="btn-pause" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition font-mono">⏸ PAUSE</button>
-        <button id="btn-next" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition font-mono">NEXT ▶</button>
-      </div>
-    </div>
-  </header>
+<div class="dash">
+<h2 class="sr-only">SunPower Direct Quality Initiative FPY Dashboard — Figures 1 through 7, Work Weeks 14–25 2026</h2>
 
-  <!-- Interactive Graph Split Screen Layout -->
-  <main class="flex-1 p-6 grid grid-cols-1 xl:grid-cols-3 gap-6 overflow-hidden min-h-0">
-    
-    <!-- Left & Middle Pane: Dual Graph Display Workspace -->
-    <div class="xl:col-span-2 flex flex-col gap-6 min-h-0">
-      
-      <!-- Operational Subheader Block -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex justify-between items-center shrink-0 shadow-lg relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
-        <div>
-          <span class="text-xs text-amber-400 font-bold uppercase tracking-widest block mb-0.5 font-mono" id="slide-stage">STAGE STATUS</span>
-          <h2 class="text-xl font-black text-white tracking-tight" id="slide-title">Extracting Stage Elements...</h2>
-        </div>
-        <div class="flex gap-6 text-right text-xs font-mono">
-          <div>
-            <span class="text-slate-500 block">SPEC CODE</span>
-            <span class="text-slate-200 font-bold" id="meta-spec">-</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block">RCCA STATUS</span>
-            <span class="text-rose-400 font-bold" id="meta-rcca">-</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Graph Viewport Grid Arena -->
-      <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
-        
-        <!-- Graph 1 Pane: First Pass Yield Trend Component -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col min-h-0 shadow-md">
-          <h3 class="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-800/80 pb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            Figure A: FPY Trend Timeline
-          </h3>
-          <div class="flex-1 relative min-h-0 bg-slate-950/40 p-2 rounded-lg">
-            <canvas id="chart-fpy"></canvas>
-          </div>
-        </div>
-
-        <!-- Graph 2 Pane: Pareto Defect Breakdown Component -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col min-h-0 shadow-md">
-          <h3 class="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-800/80 pb-2">
-            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-            Figure B: Pareto Defect Frequency
-          </h3>
-          <div class="flex-1 relative min-h-0 bg-slate-950/40 p-2 rounded-lg">
-            <canvas id="chart-pareto"></canvas>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Right Side Pane: Operational Context & Summary Data Insights -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col min-h-0 shadow-lg">
-      <h3 class="text-sm font-bold uppercase text-slate-300 tracking-wider mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
-        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        Extracted Context Details
-      </h3>
-      
-      <div class="flex-1 overflow-y-auto pr-1 space-y-3 font-mono text-xs" id="context-list">
-        <p class="text-slate-500 italic">Processing layout elements...</p>
-      </div>
-
-      <!-- Station Ownership Summary Badge Block -->
-      <div class="mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 gap-2 text-[11px] font-mono">
-        <div class="bg-slate-950/60 p-2 rounded border border-slate-800/60">
-          <span class="text-slate-500 block">PROCESS OWNER</span>
-          <span class="text-slate-200 font-bold" id="meta-owner">-</span>
-        </div>
-        <div class="bg-slate-950/60 p-2 rounded border border-slate-800/60">
-          <span class="text-slate-500 block">QUALITY AUDITOR</span>
-          <span class="text-slate-200 font-bold" id="meta-qa">-</span>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Cycle Linear Progress Bar -->
-  <div class="w-full h-1 bg-slate-900 shrink-0">
-    <div id="loop-progress" class="h-full bg-amber-500 transition-all duration-100 ease-linear" style="width: 0%;"></div>
+<div class="hdr">
+  <div>
+    <h1>SunPower Direct — Quality Initiative FPY = 100%</h1>
+    <p>Cignetti Turnaround WW25 2026 &nbsp;·&nbsp; Author: JYH/EVV/ERF &nbsp;·&nbsp; Data through WW25 2026 &nbsp;·&nbsp; Target: FPY 100%</p>
   </div>
+  <span class="badge">TARGET TO FPY=100%</span>
+</div>
 
-  <!-- Automation Application Execution Engine Script -->
-  <script>
-    let slidesData = [];
-    let currentSlideIndex = 0;
-    let isPaused = false;
-    const slideDuration = 15000; // Time in milliseconds per slide (15 seconds)
-    let progressTimer = null;
-    let progressElapsed = 0;
+<div class="kpis">
+  <div class="kpi"><div class="kpi-lbl">Design FDC S4</div><div class="kpi-val v-red">63%</div><div class="kpi-sub">WW25 — Spec 10470</div></div>
+  <div class="kpi"><div class="kpi-lbl">SCV S10</div><div class="kpi-val v-red">70%</div><div class="kpi-sub">WW25 — Spec 10496</div></div>
+  <div class="kpi"><div class="kpi-lbl">Install M1 S11-12</div><div class="kpi-val v-grn">98%</div><div class="kpi-sub">WW25 — Spec 12285</div></div>
+  <div class="kpi"><div class="kpi-lbl">FIV S14</div><div class="kpi-val v-red">68%</div><div class="kpi-sub">WW25 — Spec 12807</div></div>
+  <div class="kpi"><div class="kpi-lbl">Activation M3</div><div class="kpi-val v-grn">100%</div><div class="kpi-sub">WW25 — No Spec</div></div>
+</div>
 
-    // Chart.js global layout references
-    let fpyChartInstance = null;
-    let paretoChartInstance = null;
+<div class="nav">
+  <button class="nb on" onclick="go(0)">Fig 1 — Process map</button>
+  <button class="nb" onclick="go(1)">Fig 2 — Design FDC (S4)</button>
+  <button class="nb" onclick="go(2)">Fig 3 — SCV (S10)</button>
+  <button class="nb" onclick="go(3)">Fig 4 — Install M1</button>
+  <button class="nb" onclick="go(4)">Fig 5 — FIV S14</button>
+  <button class="nb" onclick="go(5)">Fig 6 — Activation M2/M3</button>
+  <button class="nb" onclick="go(6)">Fig 7 — New Homes</button>
+  <div class="cc">
+    <button class="cb" onclick="prev()" aria-label="Previous"><i class="ti ti-chevron-left"></i></button>
+    <span class="sc" id="sc">1 / 7</span>
+    <button class="cb" onclick="nxt()" aria-label="Next"><i class="ti ti-chevron-right"></i></button>
+    <button class="cb play" id="pb" onclick="tog()" aria-label="Auto-cycle"><i class="ti ti-player-play" id="pi"></i></button>
+  </div>
+</div>
 
-    window.addEventListener('DOMContentLoaded', () => {
-      fetchPowerPointData();
-      setupControls();
+<!-- SLIDE 0 — Fig 1 -->
+<div class="slide on" id="s0">
+  <div class="stitle">Figure 1 — SunPower Direct processes · target FPY = 100%</div>
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>T Level</th><th>Stage</th><th>Owner</th><th>Milestone 1 → Milestone 2</th><th>Level 2</th><th>Level 3</th><th>Latest FPY</th></tr></thead>
+      <tbody id="tb1"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 1 — Fig 2 -->
+<div class="slide" id="s1">
+  <div class="stitle">Figure 2 — Design FDC: S4 FPY &amp; Quality Focus</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 2A — SPWR Direct: FDC FPY</h3>
+      <div class="sub">WW25 2026 &nbsp;·&nbsp; Owner: SGS / BCB &nbsp;·&nbsp; QA: DJF &nbsp;·&nbsp; Spec 10470 &nbsp;·&nbsp; RCCA 235, D1 (OPEN)</div>
+      <div class="cw" style="height:200px"><canvas id="c2a" role="img" aria-label="Design FDC S4 FPY: 63%">FPY per work week: 63 percent.</canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#185FA5"></span>FPY %</span>
+        <span><span class="ll"></span>100% target</span>
+        <span><span class="ldash"></span>97% escalate to SSB</span>
+        <span>Specs L2: 12777 · L3: 10470</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 2B — Design Action Planning</h3>
+      <div class="sub">QA Execution Strategy for Q2 Strategy Roadmap</div>
+      <div style="font-size:11px; line-height:1.6; color:#2c2c2a; padding-top:10px;">
+        <ul style="padding-left:15px;">
+          <li><strong>Data Pulling Structure:</strong> Pulling foundational performance metrics directly from Salesforce based on Layout and Upgrade Review alignments.</li>
+          <li><strong>Funding Integrity Targets:</strong> Addressing key upstream design defects originating from funding reviews across M1 &amp; M2 cycles.</li>
+          <li><strong>Strategic Focus Area:</strong> Scaling engineering compliance behaviors to secure immediate improvements for critical submittals.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — Fig 3 -->
+<div class="slide" id="s2">
+  <div class="stitle">Figure 3 — SCV: S10 Corporate QA Breakdown &amp; Andon Metrics</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 3A — SCV Quality Escalation</h3>
+      <div class="sub">WW25 2026 &nbsp;·&nbsp; Spec 10496 &nbsp;·&nbsp; RCCA 188, D6 &nbsp;·&nbsp; Data: TGM/ZJW/EVV</div>
+      <div style="font-size:11px; line-height:1.5; color:#2c2c2a;">
+        <p><strong>Status:</strong> 70% FPY Performance Level (Escalate to SSB)</p>
+        <p style="margin-top:5px;"><strong>Andon History Log:</strong></p>
+        <div class="andon-note" style="background:#FFF3CD; color:#854F0B; margin-bottom:4px;">⚠️ ANDON CORD ACTIVATED: 1/27/2026, 3PM (SSB-164A)</div>
+        <div class="andon-note" style="background:#E1F5EE; color:#1D9E75;">✓ ANDON CORD LIFTED: 2/01/2026, 11:15AM Sunday (SSB-164B)</div>
+        <p style="margin-top:8px; font-size:10px; color:#888780;">* Note: WW17 and WW23 data revised to 100% for strict specification alignment rules.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 3B — Corporate QA Defect Distribution</h3>
+      <div class="sub">WW52-WW25 2026 &nbsp;·&nbsp; Open Core Tracking Tracker</div>
+      <div class="cw" style="height:200px"><canvas id="c3b" role="img" aria-label="SCV Pareto Tracker"></canvas></div>
+      <div class="leg"><span><span class="ld" style="background:#2B6C8E"></span>Defect Incidence</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — Fig 4 -->
+<div class="slide" id="s3">
+  <div class="stitle">Figure 4 — Install M1 Corporate QA Audit Tracking</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 4A — M1 Quality Interventions</h3>
+      <div class="sub">WW24-WW25 2026 &nbsp;·&nbsp; Owner: KMM/AEP &nbsp;·&nbsp; Spec 12285 &nbsp;·&nbsp; RCCA 228, D6 (OPEN)</div>
+      <div style="font-size:11px; line-height:1.6; color:#2c2c2a;">
+        <p><strong>Deployment Action:</strong> Additional Quality Staff deployed and validating files upstream before submission to Corporate QA.</p>
+        <p style="margin-top:5px;"><strong>Containment Parameters:</strong></p>
+        <ul style="padding-left:15px; font-size:10px; color:#5f5e5a;">
+          <li><strong>WW24 Field:</strong> PCS Bundling, CT Issue, FUNDING CSLB Disclosure, Production Modelling. (Decoder: 2 KMM / 2 RYW).</li>
+          <li><strong>WW25 Design:</strong> Electrical Issue (1 Reject under Decoder 1 RYW).</li>
+        </ul>
+        <div class="andon-note" style="margin-top:8px;">★ Andon Cord Action Active: Training Spec 12285, Rev N Update Required Upstream.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 4B — Pareto of Decoder Performance</h3>
+      <div class="sub">Accept vs Reject Audits across Engineering Owners (WW24-WW25)</div>
+      <div class="cw" style="height:200px"><canvas id="c4b" role="img" aria-label="Decoder performance bar chart"></canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#1D9E75"></span>Accept</span>
+        <span><span class="ld" style="background:#E24B4A"></span>Reject</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — Fig 5 -->
+<div class="slide" id="s4">
+  <div class="stitle">Figure 5 — Final Inspection Verification: S14 Trends</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 5A — FIV S14 Performance Map</h3>
+      <div class="sub">WW18–WW25 &nbsp;·&nbsp; Owner: RLJ &nbsp;·&nbsp; QA: TGM, ZJW &nbsp;·&nbsp; Spec 12807 &nbsp;·&nbsp; RCCA 187, D3 (OPEN)</div>
+      <div style="font-size:11px; line-height:1.5; color:#2c2c2a;">
+        <p><strong>Current Status:</strong> 68% FPY Yield performance marks.</p>
+        <div class="andon-note" style="background:#FCEBEB; color:#A32D2D; margin-top:10px;">⚠️ Escalation Level Triggered to SSB. Andon Cord Focused on Crew from IL &amp; MI (ZJW-30A).</div>
+        <p style="margin-top:10px; font-size:10px; color:#b4b2a9;">* Data Validation Warning: WW20-WW25 Data under active verification cycles with RLJ (FIV Team).</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 5B — S14 Primary Defect Subcategories</h3>
+      <div class="sub">Structural Breakdown Rules (Baseline Reference Memo ZJW-30A)</div>
+      <div style="overflow-x:auto">
+        <table class="tbl" style="font-size:10px;">
+          <thead>
+            <tr><th>ID</th><th>Subcategory Classification Title</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td>Uncategorized: Attribution for review and category validation</td></tr>
+            <tr><td><strong>2</strong></td><td>AHJ: City or County Requirements Alignment</td></tr>
+            <tr><td><strong>3</strong></td><td>ELECTRICAL TECH (ET): Human Error Parameters</td></tr>
+            <tr><td><strong>4</strong></td><td>DESIGN: Incorrect Design, AB Design Process Faults</td></tr>
+            <tr><td><strong>5</strong></td><td>INSPECTION: Schedule confirmation / Missing documentation</td></tr>
+            <tr><td><strong>6</strong></td><td>CUSTOMER: External Account Dependencies</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — Fig 6 -->
+<div class="slide" id="s5">
+  <div class="stitle">Figure 6 — M2 &amp; M3 Corporate QA Approvals</div>
+  <div class="row2">
+    <div class="card">
+      <h3>Fig 6A — M2 Corporate Validation</h3>
+      <div class="sub">WW19-WW25 &nbsp;·&nbsp; Owner: KMM/AEP &nbsp;·&nbsp; Spec 12445 &nbsp;·&nbsp; RCCA 234, D3 (OPEN)</div>
+      <div style="font-size:11px; line-height:1.6; color:#2c2c2a;">
+        <p><strong>Yield Standing:</strong> Candidate for Andon Cord activation thresholds.</p>
+        <p style="margin-top:5px;"><strong>Defect Log Incidences:</strong></p>
+        <ul style="padding-left:15px; font-size:10px; color:#e24b4a;">
+          <li>2 – Request new Shine Disclosure (FUNDING)</li>
+          <li>2 – Incorrect Shine Disclosure (FUNDING)</li>
+        </ul>
+        <p style="margin-top:5px; font-size:10px; color:#888780;"><strong>Audited Sign-offs:</strong> TGH (Tyson Hunter), LTD (Leo Miguel De Perio), JDH (James Hampton), PXB (Pallavi Bhasker)</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Fig 6B — M3 Activation Standing</h3>
+      <div class="sub">Permission To Operate Validation Steps</div>
+      <div style="padding:20px; text-align:center; background:#fafaf8; border-radius:8px; margin-top:10px;">
+        <div style="font-size:10px; text-transform:uppercase; color:#888780;">M3 Latest FPY Status</div>
+        <div style="font-size:36px; font-weight:bold; color:#1D9E75;">100%</div>
+        <div style="font-size:10px; color:#b4b2a9; margin-top:4px;">No Spec Requirement Matrix Applied</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — Fig 7 -->
+<div class="slide" id="s6">
+  <div class="stitle">Figure 7 — New Homes processes · target FPY = 100%</div>
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>T Level</th><th>Stage</th><th>Owner</th><th>Milestone 1 → Milestone 2</th><th>Level 2</th><th>Level 3</th><th>Latest FPY</th></tr></thead>
+      <tbody id="tb7"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  <span>SunPower Direct Quality Initiative &nbsp;·&nbsp; Cignetti Turnaround WW25 &nbsp;·&nbsp; Confidential</span>
+  <span>Data source: Salesforce Data gathering &nbsp;·&nbsp; Author: JYH/EVV/ERF &nbsp;·&nbsp; Owner: ERF &nbsp;·&nbsp; Spec: 10009</span>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var BLU='#185FA5',BAR='rgba(55,138,221,0.20)',GRN='#1D9E75',RED='#E24B4A',AMB='#BA7517',BAR2='#2B6C8E';
+
+function combo(id,labs,fpy,vol){
+  var ctx=document.getElementById(id);
+  if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels:labs,datasets:[
+    {type:'bar',data:vol,backgroundColor:BAR,yAxisID:'v',order:3,borderRadius:2},
+    {type:'line',data:labs.map(function(){return 100;}),borderColor:GRN,borderWidth:1.5,borderDash:[],pointRadius:0,yAxisID:'y',order:0,tension:0},
+    {type:'line',data:labs.map(function(){return 97;}),borderColor:RED,borderWidth:1,borderDash:[5,3],pointRadius:0,yAxisID:'y',order:0,tension:0},
+    {type:'line',data:fpy,borderColor:BLU,backgroundColor:'rgba(24,95,165,0.06)',fill:true,pointBackgroundColor:BLU,pointRadius:4,pointHoverRadius:6,tension:0.25,yAxisID:'y',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(c){if(c.datasetIndex===3)return'FPY: '+c.raw+'%';if(c.datasetIndex===0)return'Vol: '+c.raw;return null;}}}},
+    scales:{
+      x:{ticks:{font:{size:9}},grid:{display:false}},
+      y:{min:0,max:115,ticks:{font:{size:9},callback:function(v){return v+'%';}},grid:{color:'rgba(0,0,0,0.05)'}},
+      v:{position:'right',ticks:{font:{size:9},color:'#b4b2a9'},grid:{display:false}}
+    }
+  }});
+}
+
+function pareto(id,labs,counts){
+  var ctx=document.getElementById(id);
+  if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels:labs,datasets:[
+    {type:'bar',data:counts,backgroundColor:BAR2,borderRadius:2,yAxisID:'y'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      x:{ticks:{font:{size:9},maxRotation:38,autoSkip:false},grid:{display:false}},
+      y:{ticks:{font:{size:9}},grid:{color:'rgba(0,0,0,0.05)'}}
+    }
+  }});
+}
+
+function initCharts(){
+  // Fig 2A: Design S4 FPY Line Chart
+  combo('c2a',['WW25'],[63],[100]);
+  
+  // Fig 3B: SCV S10 Quality Defect Counts
+  pareto('c3b',['Funding Defect','Electrical Defect'],[1,12]);
+  
+  // Fig 4B: M1 Auditor Stack Configuration Chart
+  var ctx4b = document.getElementById('c4b');
+  if(ctx4b){
+    new Chart(ctx4b, {
+      type: 'bar',
+      data: {
+        labels: ['KMM', 'RYW', 'GAY', 'TTS', 'AWH'],
+        datasets: [
+          { label: 'Accept', data: [33, 19, 10, 1, 1], backgroundColor: GRN },
+          { label: 'Reject', data: [2, 3, 0, 0, 0], backgroundColor: RED }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { stacked: true }, y: { stacked: true } }
+      }
     });
+  }
+}
 
-    async function fetchPowerPointData() {
-      const statusEl = document.getElementById('file-status');
-      try {
-        const response = await fetch('./presentation.pptx');
-        if (!response.ok) throw new Error("Could not find presentation.pptx in the root folder directory.");
-        
-        const blob = await response.blob();
-        const zip = await JSZip.loadAsync(blob);
-        
-        const slideFiles = Object.keys(zip.files).filter(path => 
-          path.startsWith('ppt/slides/slide') && path.endsWith('.xml')
-        );
+var D1=[
+  {t:'T0',s:'S1',o:'KXW/DJF',m:'Booking to Project Received',l2:'12885',l3:'10848',f:'Investigating*'},
+  {t:'T0',s:'S2',o:'SGS/DJF',m:'Project Received to Layout and Upgrade Review',l2:'12777',l3:'12304',f:'Investigating*'},
+  {t:'T0',s:'S3',o:'SGS/DJF',m:'Layout and Upgrade Review to Project Huddle',l2:'12777',l3:'12304',f:'Investigating*'},
+  {t:'T0',s:'S4',o:'SGS/DJF',m:'Project Huddle to FDC (Project Acceptance)',l2:'12777',l3:'10470',f:'63%'},
+  {t:'T1',s:'S5',o:'SGS/DJF',m:'Final Design Complete to Permit Pack Completed',l2:'12777',l3:'12385',f:'Investigating*'},
+  {t:'T1',s:'S6',o:'PXA/DJF',m:'Permit Pack Completed to Request Permit',l2:'12759',l3:'10823',f:'97%'},
+  {t:'T1',s:'S6 (IXP1)',o:'PKN/EZD',m:'IXP1 Submission',l2:'12649',l3:'12460',f:'Investigating*'},
+  {t:'T1',s:'S7',o:'PXA/DJF',m:'Request Permit to Permit Approved',l2:'12649',l3:'12556',f:'100%'},
+  {t:'T1',s:'S7 (IXP1)',o:'PKN/EZD',m:'IXP1 Submission to IXP1 Approval',l2:'12649',l3:'12556',f:'100%'},
+  {t:'T1',s:'S8',o:'SAH/DJF',m:'Permit Approved/IXP1 Approval to Ready To Schedule',l2:'12783',l3:'10961',f:'Investigating*'},
+  {t:'T1',s:'S9',o:'SAH/ZJW',m:'Ready To Schedule to Install Scheduled',l2:'12783',l3:'11819',f:'Investigating*'},
+  {t:'T1',s:'S10',o:'IPG/ZJW',m:'Install Scheduled to Substantial Completion Verified',l2:'12022',l3:'10496',f:'70%'},
+  {t:'T2',s:'S11',o:'KMM/RJG',m:'Substantial Completion Verified to M2 Install Submission (Parallel)',l2:'No Spec',l3:'12285/12430',f:'97%'},
+  {t:'T2',s:'S12',o:'KMM/RJG',m:'M2 Submission to M2 Install Approved (Parallel)',l2:'No Spec',l3:'12285/12430',f:'98%'},
+  {t:'T2',s:'S13',o:'RLJ/ZJW',m:'Substantial Complete to Final Inspection Scheduled',l2:'12807',l3:'11001',f:'Investigating*'},
+  {t:'T2',s:'S14',o:'RLJ/ZJW',m:'Final Inspection Scheduled to Final Inspection Verified',l2:'12807',l3:'10899',f:'68%'},
+  {t:'T3',s:'S15',o:'PKN/EZD',m:'Final Inspection Verified to Permission To Operate',l2:'12834',l3:'11143',f:'Investigating*'},
+  {t:'T3',s:'S15 (M3)',o:'KMM/RJG',m:'Permission To Operate to M3 Activation Approved',l2:'No Spec',l3:'12445',f:'100%'},
+  {t:'T3',s:'S16',o:'MBC/TGM',m:'Permission To Operate to Grant PTO To Customer',l2:'13050',l3:'13049',f:'Investigating*'}
+];
 
-        slideFiles.sort((a, b) => {
-          return parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]);
-        });
+var D7=[
+  {t:'T0',s:'C1',o:'SFA/RJG',m:'Community Lead to Community Bid Request',l2:'12321',l3:'10508',f:'Investigating*'},
+  {t:'T0',s:'C2',o:'SFA/RJG',m:'Community Bid Request to Community Bid Review',l2:'12321',l3:'12507',f:'Investigating*'},
+  {t:'T0',s:'C3',o:'SFA/RJG',m:'Community Bid Review to Community Award',l2:'12321',l3:'12507',f:'Investigating*'},
+  {t:'T0',s:'C4',o:'MTO/TGM',m:'Community Award to Final Design Approved',l2:'11227',l3:'11463',f:'100%'},
+  {t:'T0',s:'C5',o:'MQT/TGM',m:'Final Design Approved to Production Trench',l2:'13051',l3:'12507',f:'Investigating*'},
+  {t:'T1',s:'L6',o:'RIH/TGM',m:'Production Trench to Lot Design Requested',l2:'13044',l3:'10549',f:'Investigating*'},
+  {t:'T1',s:'L7',o:'MTO/TGM',m:'Lot Design Requested to Lot Design Completed',l2:'11229',l3:'11466',f:'100% (WW21)'},
+  {t:'T1',s:'L8',o:'JMN/ZJW',m:'Lot Design Completed to Lot Permit Approved',l2:'11287',l3:'10506',f:'Investigating*'},
+  {t:'T1',s:'L9',o:'RIH/ZJW',m:'Lot Permit Approved to Rough Wire',l2:'13044',l3:'10791',f:'Investigating*'},
+  {t:'T2',s:'L10',o:'RIH/TGM',m:'Rough Wire to Install',l2:'13044',l3:'10790',f:'Investigating*'},
+  {t:'T2',s:'L11',o:'ROS/TGM',m:'Installation to Job Close Out (JCO)',l2:'12752',l3:'10790',f:'100%'},
+  {t:'T3',s:'L12',o:'RIH/ZJW',m:'Job Close Out (JCO) to Final Permit Approved',l2:'13044',l3:'12327',f:'Investigating*'},
+  {t:'T4',s:'L13',o:'LKR/EZD',m:'Final Permit Approved to Permission To Operate (PTO)',l2:'12281',l3:'10853',f:'100%'},
+  {t:'T5',s:'L14',o:'KAM/EZD/TGM',m:'Permission To Operate (PTO) to Activation',l2:'13058',l3:'12152',f:'Investigating*'},
+  {t:'T0',s:'C15',o:'RIH/EZD',m:'Model Trench to Community Install Complete (Parallel)',l2:'13044',l3:'11971',f:'Investigating*'},
+  {t:'T1',s:'L16',o:'PLMR/RJG',m:'Opportunity appt. confirmed to HO Contract Signed (Parallel)',l2:'13037',l3:'10782',f:'Investigating*'},
+  {t:'T1',s:'L17',o:'PPPV/RJG',m:'HO Contract Signed to Escrow date (Parallel)',l2:'13066',l3:'10670',f:'Investigating*'},
+  {t:'T2',s:'L18',o:'PPPV/RJG',m:'Job Close Out (JCO) to Escrow date (Parallel)',l2:'13066',l3:'10670',f:'Investigating*'},
+  {t:'T2',s:'L19',o:'PLMR/RJG',m:'Escrow date to TPO Contract Signed (Parallel)',l2:'13037',l3:'12477',f:'Investigating*'},
+  {t:'T4',s:'L20',o:'PAEP/RJG',m:'TPO Contract Signed to M1 -Installation (Financier Approval) (Parallel)',l2:'12752',l3:'10724',f:'100%'},
+  {t:'T4',s:'L21',o:'PAEP/RJG',m:'M1 to M2 -Activation (Financier Approval) (Parallel)',l2:'12752',l3:'10808',f:'100%'}
+];
 
-        // Parse starting sequence from Slide 2 (index 1) onwards
-        for (let i = 1; i < slideFiles.length; i++) {
-          const xmlText = await zip.files[slideFiles[i]].async('text');
-          const dataRecord = generateMockedGraphData(xmlText, i + 1);
-          slidesData.push(dataRecord);
-        }
+function pc(f){return f.indexOf('100%')===0?'pg':f==='Investigating*'?'pi':parseInt(f)>=95?'pa':'pr';}
+function pl(f){return f;}
 
-        statusEl.textContent = "Successfully synchronized with presentation.pptx data source.";
-        statusEl.className = "text-xs text-emerald-400";
-        
-        renderCurrentSlide();
-        startCycleLoop();
+function buildTbl(id,data){
+  var tb=document.getElementById(id);
+  if(!tb)return;
+  data.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r.t+'</td><td><strong>'+r.s+'</strong></td><td style="white-space:nowrap;color:#5f5e5a">'+r.o+'</td><td>'+r.m+'</td><td style="color:#888780">'+r.l2+'</td><td style="color:#888780">'+r.l3+'</td><td><span class="pill '+pc(r.f)+'">'+pl(r.f)+'</span></td>';
+    tb.appendChild(tr);
+  });
+}
 
-      } catch (error) {
-        console.error(error);
-        statusEl.textContent = `Sync Error: ${error.message}`;
-        statusEl.className = "text-xs text-rose-400";
-      }
-    }
+buildTbl('tb1',D1);
+buildTbl('tb7',D7);
 
-    // Secondary parsing architecture map to map raw presentation text patterns into visual chart objects
-    function generateMockedGraphData(xmlText, slideNumber) {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-      const textNodes = xmlDoc.getElementsByTagName("a:t");
-      
-      let strings = [];
-      for (let i = 0; i < textNodes.length; i++) {
-        const txt = textNodes[i].textContent.trim();
-        if (txt) strings.push(txt);
-      }
+var cur=0,playing=false,timer=null,chartsInited=false;
+var slides=document.querySelectorAll('.slide');
+var nbts=document.querySelectorAll('.nb');
 
-      const fullTextBlob = strings.join(" ");
+function go(n){
+  slides[cur].classList.remove('on');
+  nbts[cur].classList.remove('on');
+  cur=n;
+  slides[cur].classList.add('on');
+  nbts[cur].classList.add('on');
+  document.getElementById('sc').textContent=(cur+1)+' / '+slides.length;
+  if(!chartsInited){chartsInited=true;initCharts();}
+}
+function nxt(){go((cur+1)%slides.length);}
+function prev(){go((cur-1+slides.length)%slides.length);}
+function tog(){
+  playing=!playing;
+  var ic=document.getElementById('pi'),pb=document.getElementById('pb');
+  if(playing){ic.className='ti ti-player-pause';pb.style.background='#A32D2D';pb.style.borderColor='#A32D2D';timer=setInterval(nxt,5500);}
+  else{ic.className='ti ti-player-play';pb.style.background='#185FA5';pb.style.borderColor='#185FA5';clearInterval(timer);}
+}
 
-      // Fallbacks to parse identifiers out of slide string data arrays
-      let parsedTitle = "Cignetti Process Verification Stage";
-      let stageLabel = `STAGE S${slideNumber}`;
-      
-      strings.forEach(str => {
-        if (str.includes("S4:") || str.includes("Design FDC")) { parsedTitle = "Design FDC: S4 FPY & Pareto Analysis"; stageLabel = "STAGE S4"; }
-        else if (str.includes("S10:") || str.includes("SCV")) { parsedTitle = "SCV: S10 FPY & Pareto Analysis"; stageLabel = "STAGE S10"; }
-        else if (str.includes("M1") || str.includes("Install M1")) { parsedTitle = "Install M1 Corporate QA FPY & Pareto Analysis"; stageLabel = "MILESTONE M1"; }
-        else if (str.includes("S14:") || str.includes("Final Inspection")) { parsedTitle = "Final Inspection Verification: S14 FPY & Pareto"; stageLabel = "STAGE S14"; }
-        else if (str.includes("M2") || str.includes("Activation M2")) { parsedTitle = "Activation M2 Corporate QA FPY & Pareto Analysis"; stageLabel = "MILESTONE M2"; }
-      });
-
-      if (parsedTitle === "Cignetti Process Verification Stage" && strings[0]) {
-        parsedTitle = strings[0];
-      }
-
-      const specMatch = fullTextBlob.match(/SPEC(?:IFICATION)?\s*:?\s*(\d+)/i) || fullTextBlob.match(/Spec\s*(\d+)/);
-      const rccaMatch = fullTextBlob.match(/RCCA\s*:?\s*(\d+(?:\s*,\s*D\d+)?)/i) || fullTextBlob.match(/RCCA\s*(\d+)/);
-
-      // Generate actual sample timeline sequences dynamically based on slide types
-      const weeks = ["WW19", "WW20", "WW21", "WW22", "WW23", "WW24"];
-      let fpyValues = [94, 96, 95, 97, 98, 97]; // Standard background baseline
-
-      if (stageLabel === "STAGE S4") fpyValues = [78, 82, 80, 75, 71, 73];
-      if (stageLabel === "STAGE S14") fpyValues = [85, 80, 74, 76, 70, 72];
-      if (stageLabel === "STAGE S10") fpyValues = [90, 92, 95, 91, 100, 92];
-
-      // Define default Pareto categories for fallbacks if specific data sets are not explicit
-      let categories = ["Defect 1", "Defect 2", "Defect 3", "Defect 4", "Defect 5"];
-      let frequencies = [12, 8, 5, 3, 2];
-
-      if (stageLabel === "STAGE S14") {
-        categories = ["Uncategorized", "AHJ Criteria", "Electrical Tech", "Design Mismatch", "Documentation"];
-        frequencies = [15, 11, 7, 4, 2];
-      } else if (stageLabel === "STAGE S10" || stageLabel === "MILESTONE M2") {
-        categories = ["Funding Criteria", "Electrical Failure", "Missing Photos", "Permit Mismatch", "Blurry Assets"];
-        frequencies = [8, 6, 4, 3, 1];
-      } else if (stageLabel === "MILESTONE M1") {
-        categories = ["Field Bundling", "CT Configuration", "Electrical Hookup", "Production Modeling", "Other"];
-        frequencies = [14, 9, 6, 3, 2];
-      }
-
-      return {
-        slideNumber: slideNumber,
-        title: parsedTitle,
-        stage: stageLabel,
-        spec: specMatch ? specMatch[1] : "10009",
-        rcca: rccaMatch ? `RCCA ${rccaMatch[1]} (OPEN)` : "Active Monitoring",
-        owner: fullTextBlob.includes("KMM") ? "KMM / AEP" : "SGS / BCB",
-        qa: fullTextBlob.includes("ZJW") ? "ZJW / TGM" : "DJF / RJG",
-        rawStrings: strings,
-        chartData: {
-          fpy: { labels: weeks, data: fpyValues },
-          pareto: { labels: categories, counts: frequencies }
-        }
-      };
-    }
-
-    function renderCurrentSlide() {
-      if (slidesData.length === 0) return;
-      const data = slidesData[currentSlideIndex];
-
-      // Build out standard metadata structures
-      document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${slidesData.length}`;
-      document.getElementById('slide-title').textContent = data.title;
-      document.getElementById('slide-stage').textContent = data.stage;
-      document.getElementById('meta-spec').textContent = data.spec;
-      document.getElementById('meta-rcca').textContent = data.rcca;
-      document.getElementById('meta-owner').textContent = data.owner;
-      document.getElementById('meta-qa').textContent = data.qa;
-
-      // Update right-hand informational elements container layout
-      const contextContainer = document.getElementById('context-list');
-      contextContainer.innerHTML = "";
-      
-      const cleanList = [...new Set(data.rawStrings)].filter(s => s.length > 5 && !s.includes("SPEC") && !s.includes("Author:"));
-      cleanList.slice(1, 7).forEach(str => {
-        const logItem = document.createElement('div');
-        logItem.className = "p-2 bg-slate-950/50 border border-slate-800 rounded text-slate-400 leading-tight";
-        logItem.innerHTML = `<span class="text-amber-500 font-bold">▶</span> ${str}`;
-        contextContainer.appendChild(logItem);
-      });
-
-      // Execute Canvas Chart Rendering Upgrades
-      buildFpyTrendChart(data.chartData.fpy);
-      buildParetoDistributionChart(data.chartData.pareto);
-
-      progressElapsed = 0;
-    }
-
-    function buildFpyTrendChart(fpyData) {
-      const ctx = document.getElementById('chart-fpy').getContext('2d');
-      if (fpyChartInstance) fpyChartInstance.destroy();
-
-      fpyChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: fpyData.labels,
-          datasets: [
-            {
-              label: 'Actual FPY %',
-              data: fpyData.data,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              borderWidth: 3,
-              tension: 0.2,
-              fill: true
-            },
-            {
-              label: 'Objective Target (100%)',
-              data: Array(fpyData.labels.length).fill(100),
-              borderColor: '#ef4444',
-              borderWidth: 2,
-              borderDash: [6, 6],
-              pointStyle: 'none',
-              pointRadius: 0,
-              fill: false
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { family: 'monospace', size: 10 } } } },
-          scales: {
-            y: { min: 0, max: 110, grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'monospace' } } },
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'monospace' } } }
-          }
-        }
-      });
-    }
-
-    function buildParetoDistributionChart(paretoData) {
-      const ctx = document.getElementById('chart-pareto').getContext('2d');
-      if (paretoChartInstance) paretoChartInstance.destroy();
-
-      const totalSum = paretoData.counts.reduce((a, b) => a + b, 0);
-      let cumulativeSum = 0;
-      const cumulativePercentages = paretoData.counts.map(count => {
-        cumulativeSum += count;
-        return Math.round((cumulativeSum / totalSum) * 100);
-      });
-
-      paretoChartInstance = new Chart(ctx, {
-        data: {
-          labels: paretoData.labels,
-          datasets: [
-            {
-              type: 'bar',
-              label: 'Defect Frequency Count',
-              data: paretoData.counts,
-              backgroundColor: '#6366f1',
-              borderRadius: 4,
-              yAxisID: 'y'
-            },
-            {
-              type: 'line',
-              label: 'Cumulative %',
-              data: cumulativePercentages,
-              borderColor: '#f59e0b',
-              borderWidth: 2,
-              pointBackgroundColor: '#f59e0b',
-              yAxisID: 'y2'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { family: 'monospace', size: 10 } } } },
-          scales: {
-            y: { position: 'left', grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'monospace' } } },
-            y2: { position: 'right', min: 0, max: 105, grid: { display: false }, ticks: { color: '#f59e0b', callback: value => `${value}%`, font: { family: 'monospace' } } },
-            x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'monospace', size: 9 } } }
-          }
-        }
-      });
-    }
-
-    function startCycleLoop() {
-      if (progressTimer) clearInterval(progressTimer);
-      const tickRate = 100;
-
-      progressTimer = setInterval(() => {
-        if (!isPaused) {
-          progressElapsed += tickRate;
-          const pct = (progressElapsed / slideDuration) * 100;
-          document.getElementById('loop-progress').style.width = `${Math.min(pct, 100)}%`;
-          
-          if (progressElapsed >= slideDuration) {
-            navigateSlideLoop(1);
-          }
-        }
-      }, tickRate);
-    }
-
-    function navigateSlideLoop(direction) {
-      if (slidesData.length === 0) return;
-      currentSlideIndex = (currentSlideIndex + direction + slidesData.length) % slidesData.length;
-      renderCurrentSlide();
-    }
-
-    function setupControls() {
-      const pauseBtn = document.getElementById('btn-pause');
-      pauseBtn.addEventListener('click', () => {
-        isPaused = !isPaused;
-        pauseBtn.textContent = isPaused ? "▶ RESUME" : "⏸ PAUSE";
-        pauseBtn.className = isPaused 
-          ? "bg-amber-500 text-slate-950 px-3 py-1.5 text-xs rounded font-bold font-mono transition" 
-          : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 text-xs rounded border border-slate-700 transition font-mono";
-      });
-
-      document.getElementById('btn-prev').addEventListener('click', () => { navigateSlideLoop(-1); });
-      document.getElementById('btn-next').addEventListener('click', () => { navigateSlideLoop(1); });
-    }
-  </script>
+setTimeout(function(){if(!chartsInited){chartsInited=true;initCharts();}},300);
+</script>
 </body>
 </html>
