@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cignetti Turnaround Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0d0d; --surface: #161616; --border: #252525;
+  --text: #e8e8e8; --muted: #666; --accent: #185FA5;
+  --green: #1D9E75; --red: #D94F4F; --r: 8px;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; flex-wrap: wrap; min-height: 48px;
+}
+.tb-title {
+  font-size: 13px; font-weight: 600; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 100px;
+}
+.tb-title em { color: var(--muted); font-style: normal; font-size: 11px; font-weight: 400; margin-left: 6px; }
+.sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 11px; border-radius: 20px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all 0.12s; white-space: nowrap;
+}
+.btn:hover { background: #222; color: var(--text); border-color: #3a3a3a; }
+.btn svg { width: 12px; height: 12px; fill: currentColor; }
+.btn-play { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-play:hover { background: #1a6fb8; border-color: #1a6fb8; }
+.btn-play.is-pause { background: var(--red); border-color: var(--red); }
+.btn-play.is-pause:hover { background: #bf4545; border-color: #bf4545; }
+
+.upload-lbl {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 11px; border-radius: 20px;
+  border: 1px dashed #333; background: transparent;
+  color: var(--muted); font-size: 11px; cursor: pointer; transition: all 0.12s;
+}
+.upload-lbl:hover { border-color: var(--accent); color: var(--accent); }
+.upload-lbl svg { width: 12px; height: 12px; fill: currentColor; }
+#fileInput { display: none; }
+.fname { font-size: 10px; color: var(--green); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.spd-lbl { font-size: 10px; color: var(--muted); }
+.spd-sel {
+  background: #1e1e1e; border: 1px solid var(--border);
+  color: var(--text); font-size: 11px; padding: 4px 6px;
+  border-radius: 6px; cursor: pointer; font-family: inherit;
+}
+.sc { font-size: 12px; color: var(--muted); min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* ── MAIN ── */
+.main {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+
+/* ── SPLASH (shown before slides load) ── */
+.splash {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 20; flex-direction: column; gap: 20px;
+}
+.splash.hidden { display: none; }
+.splash-box {
+  border: 2px dashed #252525; border-radius: 14px;
+  padding: 40px 52px; display: flex; flex-direction: column;
+  align-items: center; gap: 12px; text-align: center;
+  max-width: 440px; width: 90%; transition: border-color 0.18s, background 0.18s;
+}
+.splash-box.drag { border-color: var(--accent); background: rgba(24,95,165,0.07); }
+.splash-icon { font-size: 36px; }
+.splash-title { font-size: 17px; font-weight: 600; }
+.splash-sub { font-size: 12px; color: var(--muted); line-height: 1.65; }
+.splash-or { font-size: 10px; color: #383838; }
+.loading-bar { width: 220px; height: 3px; background: #1e1e1e; border-radius: 2px; overflow: hidden; display: none; }
+.loading-bar.on { display: block; }
+.loading-fill { height: 100%; background: var(--accent); border-radius: 2px; animation: lp 1.1s ease-in-out infinite; }
+@keyframes lp { 0%{width:0;margin-left:0} 50%{width:55%;margin-left:15%} 100%{width:0;margin-left:100%} }
+.load-txt { font-size: 11px; color: var(--muted); display: none; }
+.load-txt.on { display: block; }
+.err-txt { font-size: 11px; color: var(--red); display: none; max-width: 320px; text-align: center; line-height: 1.55; white-space: pre-wrap; }
+.err-txt.on { display: block; }
+
+/* ── VIEWER ── */
+.viewer { display: none; flex-direction: column; height: 100%; padding: 12px 16px 8px; gap: 8px; }
+.viewer.on { display: flex; }
+
+/* slide frame */
+.frame {
+  flex: 1; min-height: 0; display: flex;
+  align-items: center; justify-content: center; position: relative;
+}
+.simg {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border-radius: var(--r); box-shadow: 0 6px 40px rgba(0,0,0,0.75);
+  display: block; transition: opacity 0.26s;
+}
+.simg.fade { opacity: 0; }
+
+/* overlay arrows */
+.arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 56px; background: rgba(0,0,0,0.45);
+  border: none; border-radius: 6px; color: rgba(255,255,255,0.55);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  opacity: 0; z-index: 5; transition: opacity 0.13s, background 0.12s;
+}
+.arrow svg { width: 18px; height: 18px; fill: currentColor; }
+.arrow.L { left: 8px; }
+.arrow.R { right: 8px; }
+.frame:hover .arrow { opacity: 1; }
+.arrow:hover { background: rgba(0,0,0,0.72); color: #fff; }
+
+/* progress */
+.prog-rail { height: 2px; background: #1e1e1e; border-radius: 1px; flex-shrink: 0; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.26s ease; }
+
+/* thumbnails */
+.thumbs {
+  display: flex; gap: 5px; overflow-x: auto; flex-shrink: 0;
+  padding-bottom: 2px; scrollbar-width: thin; scrollbar-color: #252525 transparent;
+}
+.thumbs::-webkit-scrollbar { height: 3px; }
+.thumbs::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+.thumb {
+  flex-shrink: 0; width: 86px; border-radius: 4px; overflow: hidden;
+  cursor: pointer; border: 2px solid transparent;
+  transition: border-color 0.12s, transform 0.1s; position: relative;
+}
+.thumb:hover { border-color: #3a3a3a; transform: translateY(-2px); }
+.thumb.on { border-color: var(--accent); }
+.thumb img { width: 100%; display: block; }
+.thumb-n {
+  position: absolute; bottom: 2px; right: 3px;
+  font-size: 8px; color: rgba(255,255,255,0.8);
+  background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 2px;
+}
+
+/* hint */
+.hint { font-size: 9px; color: #2e2e2e; text-align: center; flex-shrink: 0; padding-bottom: 2px; }
+.hint kbd {
+  background: #181818; border: 1px solid #252525; border-radius: 2px;
+  padding: 0 3px; font-size: 9px; color: #444; font-family: inherit;
+}
+
+/* fullscreen tweaks */
+:fullscreen .topbar { display: none; }
+:fullscreen .thumbs, :fullscreen .hint, :fullscreen .prog-rail { display: none; }
+:fullscreen .viewer { padding: 0; }
+:fullscreen .simg { border-radius: 0; box-shadow: none; }
+:fullscreen .kpi-header { display: none; }
+
+/* ── KPI HEADER ── */
+.kpi-header {
+  flex-shrink: 0; padding: 14px 20px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.kpi-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.kpi-h1 { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.kpi-sub {
+  font-size: 11px; color: var(--muted); margin-top: 3px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.kpi-sub span:not(:last-child)::after { content: '·'; margin-left: 6px; color: #333; }
+.kpi-target-badge {
+  background: var(--green); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 6px 16px; border-radius: 20px; white-space: nowrap; letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.kpi-cards {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi-card {
+  background: #1c1c1c; border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; min-width: 0;
+}
+.kpi-card-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-card-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.kpi-card-foot { font-size: 10.5px; color: #555; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-red { color: #E24B4A; }
+.kpi-amber { color: #BA7517; }
+.kpi-green { color: #1D9E75; }
+
+/* fig nav strip */
+.fig-nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.fig-pill {
+  font-size: 12px; padding: 8px 16px; border-radius: 20px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: inherit;
+  white-space: nowrap; transition: all 0.12s; flex-shrink: 0;
+}
+.fig-pill:hover { background: #222; color: var(--text); border-color: #3a3a3a; }
+.fig-pill.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fig-nav-spacer { flex: 1; min-width: 8px; }
+
+@media (max-width: 900px) {
+  .kpi-cards { grid-template-columns: repeat(3, 1fr); }
+  .kpi-card:nth-child(4), .kpi-card:nth-child(5) { display: none; }
+}
+@media (max-width: 600px) {
+  .kpi-cards { grid-template-columns: repeat(2, 1fr); }
+  .kpi-h1 { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="tb-title" id="tbTitle">Cignetti Turnaround <em id="tbSub"></em></div>
+
+  <div class="sep"></div>
+
+  <!-- Upload override -->
+  <label class="upload-lbl" for="fileInput" title="Load a new .pptx to refresh slides">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM12 17l-4-4h2.5v-4h3v4H16l-4 4z"/></svg>
+    Load .pptx
+  </label>
+  <input type="file" id="fileInput" accept=".pptx">
+  <span class="fname" id="fname"></span>
+
+  <div class="sep"></div>
+
+  <!-- Speed -->
+  <span class="spd-lbl">Interval</span>
+  <select class="spd-sel" id="spd">
+    <option value="3000">3 s</option>
+    <option value="5000" selected>5 s</option>
+    <option value="8000">8 s</option>
+    <option value="12000">12 s</option>
+    <option value="20000">20 s</option>
+    <option value="30000">30 s</option>
+  </select>
+
+  <div class="sep"></div>
+
+  <!-- Nav -->
+  <button class="btn" onclick="prev()" title="Previous (←)">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="sc" id="sc">— / —</span>
+  <button class="btn" onclick="nxt()" title="Next (→)">
+    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+  </button>
+
+  <!-- Play/Pause -->
+  <button class="btn btn-play" id="playBtn" onclick="togglePlay()">
+    <svg id="playIco" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <span id="playLbl">Play</span>
+  </button>
+
+  <!-- Fullscreen -->
+  <button class="btn" onclick="toggleFS()" title="Fullscreen (F)">
+    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+  </button>
+</div>
+
+<!-- ── KPI HEADER ── -->
+<div class="kpi-header" id="kpiHeader">
+  <div class="kpi-top">
+    <div>
+      <div class="kpi-h1">SunPower Direct — Quality Initiative FPY = 100%</div>
+      <div class="kpi-sub">
+        <span>Memo SSB-217D</span>
+        <span>Author: SSB</span>
+        <span id="kpiDataThrough">Data through WW24 2026</span>
+        <span>Target: Zero Defects</span>
+      </div>
+    </div>
+    <div class="kpi-target-badge">FPY TARGET 100%</div>
+  </div>
+
+  <div class="kpi-cards" id="kpiCards">
+    <div class="kpi-card">
+      <div class="kpi-card-label">Design FDC S4</div>
+      <div class="kpi-card-val kpi-red">73%</div>
+      <div class="kpi-card-foot">WW24 — Spec 10470</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">SCV S10</div>
+      <div class="kpi-card-val kpi-amber">92%</div>
+      <div class="kpi-card-foot">WW24 — Spec 10496</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Install M1</div>
+      <div class="kpi-card-val kpi-amber">97%</div>
+      <div class="kpi-card-foot">WW24 — Spec 12285</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">FIV S14</div>
+      <div class="kpi-card-val kpi-red">72%</div>
+      <div class="kpi-card-foot">WW24 — Spec 12807</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Activation M2</div>
+      <div class="kpi-card-val kpi-amber">96%</div>
+      <div class="kpi-card-foot">WW24 — Spec 12445</div>
+    </div>
+  </div>
+
+  <div class="fig-nav" id="figNav">
+    <!-- populated dynamically once slides load -->
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main" id="main">
+
+  <!-- SPLASH -->
+  <div class="splash" id="splash">
+    <div class="splash-box" id="dropBox">
+      <div class="splash-icon">📊</div>
+      <div class="splash-title">Loading slides…</div>
+      <div class="splash-sub" id="splashSub">
+        Looking for the deck in the same folder.<br>
+        Or drop / select a <strong>.pptx</strong> file to load it manually.
+      </div>
+      <div class="splash-or">— or —</div>
+      <button class="btn btn-play" onclick="document.getElementById('fileInput').click()">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM12 17l-4-4h2.5v-4h3v4H16l-4 4z"/></svg>
+        Browse for .pptx
+      </button>
+    </div>
+    <div class="loading-bar" id="loadBar"><div class="loading-fill"></div></div>
+    <div class="load-txt" id="loadTxt"></div>
+    <div class="err-txt" id="errTxt"></div>
+  </div>
+
+  <!-- VIEWER -->
+  <div class="viewer" id="viewer">
+    <div class="frame" id="frame">
+      <button class="arrow L" onclick="prev()" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+      <img id="sImg" class="simg" src="" alt="Slide">
+      <button class="arrow R" onclick="nxt()" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+    </div>
+    <div class="prog-rail"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="hint">
+      <kbd>←</kbd><kbd>→</kbd> navigate &nbsp;·&nbsp;
+      <kbd>Space</kbd> play / pause &nbsp;·&nbsp;
+      <kbd>F</kbd> fullscreen &nbsp;·&nbsp;
+      Click thumbnail to jump
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+var slides  = [];   // [{url, label}]
+var cur     = 0;
+var playing = false;
+var timer   = null;
+
+/* ════════════════════════════════
+   STRATEGY 1 — PRE-RENDERED JPEGS
+   Try to load slides/slide-02.jpg … slides/slide-15.jpg
+   These are bundled alongside index.html after conversion
+════════════════════════════════ */
+var SLIDE_LABELS = [
+  'Process Map',                    // slide 02
+  'FDC FPY — WW24',                 // slide 03
+  'FDC Pareto — WW24',              // slide 04
+  'SCV S10 FPY — WW24',             // slide 05
+  'SCV S10 Pareto — WW24',          // slide 06
+  'M1 Corp QA FPY — WW24',          // slide 07
+  'M1 Pareto — WW24',               // slide 08
+  'S14 FIV FPY — WW18–WW24',        // slide 09
+  'S14 FIV Pareto — WW18–WW24',     // slide 10
+  'M2 Corp QA FPY — WW24',          // slide 11
+  'M2 Pareto — WW24',               // slide 12
+  'S5 Permit Pack FPY',             // slide 13
+  'S5 Permit Pack Pareto',          // slide 14
+  'New Homes Process Map',          // slide 15
+];
+
+/* Groups slides into the "Fig N" pills shown in the KPI header.
+   Each group's "start" is the slide number (matching slides/slide-NN.jpg)
+   that the pill should jump to. Update this if the deck's section order changes. */
+var FIG_GROUPS = [
+  { label: 'Fig 1 — Process map',        startSlideNum: 2  },
+  { label: 'Fig 2 — Design FDC (S4)',    startSlideNum: 3  },
+  { label: 'Fig 3 — SCV (S10)',          startSlideNum: 5  },
+  { label: 'Fig 4 — Install M1',         startSlideNum: 7  },
+  { label: 'Fig 5 — FIV S14',            startSlideNum: 9  },
+  { label: 'Fig 6 — Activation M2',      startSlideNum: 11 },
+  { label: 'Fig 7 — New Homes',          startSlideNum: 15 },
+];
+
+function buildFigNav() {
+  var nav = document.getElementById('figNav');
+  if (!nav) return;
+  nav.innerHTML = '';
+
+  FIG_GROUPS.forEach(function(g) {
+    // Only show a pill if we actually have a slide for it
+    var idx = slides.findIndex(function(s){ return s.slideNum === g.startSlideNum; });
+    if (idx === -1) return;
+    var btn = document.createElement('button');
+    btn.className = 'fig-pill';
+    btn.textContent = g.label;
+    btn.setAttribute('data-target-idx', idx);
+    btn.onclick = function() { goTo(idx, true); if (playing) resetAuto(); };
+    nav.appendChild(btn);
+  });
+
+  var spacer = document.createElement('div');
+  spacer.className = 'fig-nav-spacer';
+  nav.appendChild(spacer);
+
+  syncFigNav();
+}
+
+function syncFigNav() {
+  var nav = document.getElementById('figNav');
+  if (!nav) return;
+  var pills = nav.querySelectorAll('.fig-pill');
+  if (!pills.length) return;
+
+  // Find the fig group whose range contains `cur`
+  var activeIdx = -1;
+  for (var i = 0; i < pills.length; i++) {
+    var startIdx = parseInt(pills[i].getAttribute('data-target-idx'));
+    var nextStartIdx = (i + 1 < pills.length) ? parseInt(pills[i+1].getAttribute('data-target-idx')) : Infinity;
+    if (cur >= startIdx && cur < nextStartIdx) activeIdx = i;
+  }
+  pills.forEach(function(p, i){ p.classList.toggle('on', i === activeIdx); });
+}
+
+function tryBundledSlides() {
+  setLoading(true, 'Loading pre-rendered slides…');
+
+  // Probe a generous range in parallel so adding (or skipping) slide numbers
+  // later just works without editing this file — no early-exit streak logic
+  // that could be fooled by a gap in numbering.
+  var MAX_SLIDES = 60; // generous ceiling for a turnaround deck
+  var loaded = [];
+  var pending = MAX_SLIDES - 1; // slides 2..MAX_SLIDES
+
+  for (var n = 2; n <= MAX_SLIDES; n++) {
+    (function(current) {
+      var pad = current < 10 ? '0' + current : '' + current;
+      var url = 'slides/slide-' + pad + '.jpg';
+      var img = new Image();
+      img.onload = function() {
+        loaded.push({ url: url, label: SLIDE_LABELS[current - 2] || ('Slide ' + current), slideNum: current });
+        done();
+      };
+      img.onerror = function() { done(); };
+      img.src = url;
+    })(n);
+  }
+
+  function done() {
+    pending--;
+    if (pending > 0) return;
+    finish();
+  }
+
+  function finish() {
+    loaded.sort(function(a,b){ return a.slideNum - b.slideNum; });
+    if (loaded.length >= 2) {
+      slides = loaded;
+      document.getElementById('tbSub').textContent = 'WW24 2026 · ' + slides.length + ' slides';
+      setLoading(false);
+      buildThumbs();
+      buildFigNav();
+      goTo(0, false);
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('viewer').classList.add('on');
+      startPlay();
+    } else {
+      // No bundled images found — fall back to PPTX scan
+      setLoading(false);
+      tryPptxAuto();
+    }
+  }
+}
+
+/* ════════════════════════════════
+   STRATEGY 2 — AUTO-FETCH PPTX
+   Look for the .pptx in same folder
+════════════════════════════════ */
+var PPTX_CANDIDATES = [
+  'CIGNETTI_TURNAROUND_DASHBOARD_2-18.pptx',
+  'dashboard.pptx', 'turnaround.pptx', 'slides.pptx', 'presentation.pptx'
+];
+
+function tryPptxAuto() {
+  setLoading(true, 'Looking for .pptx in folder…');
+  function tryNext(i) {
+    if (i >= PPTX_CANDIDATES.length) {
+      // Nothing found — show manual prompt
+      setLoading(false);
+      document.getElementById('splashSub').innerHTML =
+        'No slides found automatically.<br>Drop a <strong>.pptx</strong> here or click Browse below.';
+      return;
+    }
+    fetch(PPTX_CANDIDATES[i], {method:'HEAD'})
+      .then(function(r) {
+        if (!r.ok) { tryNext(i+1); return; }
+        var name = PPTX_CANDIDATES[i];
+        setLoading(true, 'Loading ' + name + '…');
+        fetch(name).then(function(res){ return res.blob(); }).then(function(blob) {
+          var f = new File([blob], name, {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+          document.getElementById('fname').textContent = name;
+          parsePptx(f);
+        }).catch(function(){ tryNext(i+1); });
+      })
+      .catch(function(){ tryNext(i+1); });
+  }
+  tryNext(0);
+}
+
+/* ════════════════════════════════
+   PPTX PARSING (JSZip)
+   Extracts raster images from media/
+   Works for PNG/JPG/GIF; EMF loads
+   in Chromium but not all browsers
+════════════════════════════════ */
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var f = e.target.files[0]; if (f) parsePptx(f); this.value = '';
+});
+
+// Drag-drop on main area
+var mainEl = document.getElementById('main');
+var dropBox = document.getElementById('dropBox');
+mainEl.addEventListener('dragover', function(e){ e.preventDefault(); dropBox.classList.add('drag'); });
+mainEl.addEventListener('dragleave', function(){ dropBox.classList.remove('drag'); });
+mainEl.addEventListener('drop', function(e){
+  e.preventDefault(); dropBox.classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.pptx')) parsePptx(f);
+  else showErr('Please drop a .pptx file.');
+});
+
+function parsePptx(file) {
+  document.getElementById('fname').textContent = file.name;
+  clearErr(); setLoading(true, 'Reading ' + file.name + '…');
+
+  JSZip.loadAsync(file).then(function(zip) {
+    // Resolve slide order
+    return zip.file('ppt/presentation.xml').async('text').then(function(xml) {
+      var sldMatch = xml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/);
+      var rIds = sldMatch
+        ? (sldMatch[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); })
+        : [];
+      return zip.file('ppt/_rels/presentation.xml.rels').async('text').then(function(rXml) {
+        var map = {};
+        var re = /Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
+        while ((m=re.exec(rXml))) {
+          if (m[2].indexOf('slides/slide')!==-1)
+            map[m[1]] = 'ppt/' + m[2].replace(/^\.\.\//,'');
+        }
+        var ordered = rIds.filter(function(id){ return map[id]; }).map(function(id){ return map[id]; });
+        if (!ordered.length) {
+          ordered = Object.keys(zip.files)
+            .filter(function(n){ return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
+            .sort(function(a,b){ return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]); });
+        }
+        // Parse KPIs from slide 2 (index 1 = second slide)
+        if (ordered.length >= 2) parseSlide2Kpis(zip, ordered[1]);
+        return ordered;
+      });
+    });
+  }).then(function(ordered) {
+    return JSZip.loadAsync(file).then(function(zip) {
+      setLoading(true, 'Extracting slide images…');
+      // Skip slide 1 (index 0)
+      var targets = ordered.slice(1);
+
+      var promises = targets.map(function(sp, idx) {
+        var slideNum = idx + 2;
+        var sf = sp.split('/').pop();
+        var rp = 'ppt/slides/_rels/' + sf + '.rels';
+        var relsFile = zip.file(rp);
+        if (!relsFile) return Promise.resolve(null);
+
+        return relsFile.async('text').then(function(rXml) {
+          // Collect all image refs
+          var imgRe = /Type="[^"]*\/image"[^>]*Target="([^"]+)"/g, m, imgs=[];
+          while ((m=imgRe.exec(rXml))) imgs.push('ppt/'+m[1].replace(/^\.\.\//,''));
+
+          // Also harvest chart rels for chart slides
+          var chartRe = /Type="[^"]*\/chart"[^>]*Target="([^"]+)"/g, cm, charts=[];
+          while ((cm=chartRe.exec(rXml))) charts.push('ppt/'+cm[1].replace(/^\.\.\//,''));
+
+          // Prefer PNG/JPG > GIF > EMF
+          var pref = imgs.filter(function(p){ return /\.(png|jpg|jpeg)$/i.test(p); });
+          var gifs = imgs.filter(function(p){ return /\.gif$/i.test(p); });
+          var emfs = imgs.filter(function(p){ return /\.emf$/i.test(p); });
+          var chosen = pref.length ? pref[0] : gifs.length ? gifs[0] : emfs.length ? emfs[0] : null;
+
+          if (!chosen) return Promise.resolve(null);
+          var imgFile = zip.file(chosen);
+          if (!imgFile) return Promise.resolve(null);
+
+          return imgFile.async('blob').then(function(blob) {
+            var ext = chosen.split('.').pop().toLowerCase();
+            var mime = ext==='png'?'image/png':ext==='gif'?'image/gif':ext==='emf'?'image/x-emf':'image/jpeg';
+            var url = URL.createObjectURL(new Blob([blob],{type:mime}));
+            return { slideNum:slideNum, url:url, label:SLIDE_LABELS[idx]||('Slide '+slideNum) };
+          });
+        });
+      });
+
+      return Promise.all(promises).then(function(res){ return {zip:zip, res:res, count:targets.length}; });
+    });
+  }).then(function(obj) {
+    var valid = obj.res.filter(Boolean);
+
+    // If too few images extracted (chart slides), try media scan fallback
+    if (valid.length < obj.count * 0.4) {
+      return JSZip.loadAsync(file).then(function(zip) {
+        var media = Object.keys(zip.files)
+          .filter(function(n){ return /^ppt\/media\/.*\.(png|jpg|jpeg|gif)$/i.test(n); })
+          .sort(function(a,b){ return a.localeCompare(b,undefined,{numeric:true}); });
+        var mp = media.map(function(p,i){
+          return zip.file(p).async('blob').then(function(b){
+            var ext=p.split('.').pop().toLowerCase();
+            var mime=ext==='png'?'image/png':ext==='gif'?'image/gif':'image/jpeg';
+            return {slideNum:i+2, url:URL.createObjectURL(new Blob([b],{type:mime})), label:SLIDE_LABELS[i]||('Slide '+(i+2))};
+          });
+        });
+        return Promise.all(mp);
+      });
+    }
+    return valid;
+  }).then(function(finalSlides) {
+    slides = (finalSlides||[]).filter(Boolean).filter(function(s){ return s.url; });
+    if (!slides.length) {
+      setLoading(false);
+      showErr('No renderable images found.\n\nThis deck uses embedded Excel charts that require server-side conversion.\n\nFix: In PowerPoint, right-click each chart → Copy → Paste Special as PNG, then re-upload.');
+      return;
+    }
+    setLoading(false);
+    document.getElementById('tbSub').textContent = file.name.replace('.pptx','').replace(/_/g,' ') + ' · ' + slides.length + ' slides';
+    buildThumbs();
+    buildFigNav();
+    goTo(0, false);
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('viewer').classList.add('on');
+    startPlay();
+  }).catch(function(err){
+    setLoading(false);
+    showErr('Error reading PPTX:\n' + err.message);
+    console.error(err);
+  });
+}
+
+/* ════════════════════════════════
+   KPI PARSE — reads Slide 2 XML
+   Extracts FPY values for the 5
+   key stages and updates cards
+════════════════════════════════ */
+function parseSlide2Kpis(zip, slide2Path) {
+  if (!slide2Path) return;
+  zip.file(slide2Path).async('text').then(function(xml) {
+    // Strip XML tags to get plain text, then scan for known patterns
+    var plain = xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+    // Helper: find FPY value that appears after a stage/keyword match
+    function extractFpy(afterKeyword) {
+      var re = new RegExp(afterKeyword + '[\\s\\S]{0,400}?(\\d{1,3}%(?:\\s*\\(CQA\\))?|Investigating\\*)', 'i');
+      var m = plain.match(re);
+      return m ? m[1].trim() : null;
+    }
+
+    // Helper: find Spec (Level 3) value near a stage
+    function extractSpec(afterKeyword, specFallback) {
+      var re = new RegExp(afterKeyword + '[\\s\\S]{0,600}?(\\d{5})', 'i');
+      var m = plain.match(re);
+      return m ? m[1] : specFallback;
+    }
+
+    var kpis = [
+      { label: 'Design FDC S4',  keyword: 'FDC.*?Project Acceptance',  specKey: '10470', specFallback: '10470' },
+      { label: 'SCV S10',        keyword: 'Substantial Completion Verified', specKey: '10496', specFallback: '10496' },
+      { label: 'Install M1',     keyword: 'M2 Install Submission',      specKey: '12285', specFallback: '12285' },
+      { label: 'FIV S14',        keyword: 'Final Inspection Verified',  specKey: '12807', specFallback: '12807' },
+      { label: 'Activation M2',  keyword: 'M3 Activation|Activation Approved', specKey: '12445', specFallback: '12445' },
+    ];
+
+    var results = kpis.map(function(k) {
+      var fpy = extractFpy(k.keyword);
+      return { label: k.label, fpy: fpy || '—', spec: k.specFallback };
+    });
+
+    updateKpiCards(results);
+  }).catch(function(e){ console.warn('KPI parse failed:', e); });
+}
+
+function updateKpiCards(kpis) {
+  var container = document.getElementById('kpiCards');
+  if (!container) return;
+  container.innerHTML = '';
+  kpis.forEach(function(k) {
+    var val = k.fpy;
+    var num = parseInt(val);
+    var cls = isNaN(num) ? 'kpi-red' : num >= 97 ? 'kpi-green' : num >= 90 ? 'kpi-amber' : 'kpi-red';
+    var card = document.createElement('div');
+    card.className = 'kpi-card';
+    card.innerHTML =
+      '<div class="kpi-card-label">' + k.label + '</div>' +
+      '<div class="kpi-card-val ' + cls + '">' + val + '</div>' +
+      '<div class="kpi-card-foot">Latest — Spec ' + k.spec + '</div>';
+    container.appendChild(card);
+  });
+}
+function buildThumbs() {
+  var strip = document.getElementById('thumbs');
+  strip.innerHTML = '';
+  slides.forEach(function(s, i) {
+    var d = document.createElement('div');
+    d.className = 'thumb' + (i===0 ? ' on' : '');
+    d.title = s.label;
+    d.onclick = (function(idx){ return function(){ goTo(idx, true); if(playing) resetAuto(); }; })(i);
+    var img = document.createElement('img');
+    img.src = s.url; img.alt = s.label; img.loading = 'lazy';
+    var num = document.createElement('div');
+    num.className = 'thumb-n'; num.textContent = s.slideNum;
+    d.appendChild(img); d.appendChild(num);
+    strip.appendChild(d);
+  });
+}
+
+function goTo(idx, animate) {
+  if (!slides.length) return;
+  cur = ((idx % slides.length) + slides.length) % slides.length;
+  var img = document.getElementById('sImg');
+  if (animate) {
+    img.classList.add('fade');
+    setTimeout(function(){ _applySlide(img); img.classList.remove('fade'); }, 240);
+  } else {
+    _applySlide(img);
+  }
+}
+
+function _applySlide(img) {
+  var s = slides[cur];
+  img.src = s.url; img.alt = s.label;
+  document.getElementById('sc').textContent = (cur+1) + ' / ' + slides.length;
+  var pct = slides.length > 1 ? (cur / (slides.length-1)) * 100 : 100;
+  document.getElementById('prog').style.width = pct + '%';
+  // Update thumbnails
+  document.querySelectorAll('.thumb').forEach(function(t,i){ t.classList.toggle('on', i===cur); });
+  var at = document.querySelector('.thumb.on');
+  if (at) at.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  // Sync fig nav pill
+  syncFigNav();
+}
+
+function nxt() { goTo(cur+1, true); if(playing) resetAuto(); }
+function prev() { goTo(cur-1, true); if(playing) resetAuto(); }
+
+/* ════════════════════════════════
+   PLAYBACK
+════════════════════════════════ */
+function startPlay() {
+  playing = true; updatePlayBtn(); resetAuto();
+}
+function togglePlay() {
+  playing = !playing; updatePlayBtn();
+  if (playing) resetAuto(); else { clearInterval(timer); timer = null; }
+}
+function resetAuto() {
+  clearInterval(timer);
+  var spd = parseInt(document.getElementById('spd').value);
+  timer = setInterval(function(){ goTo(cur+1, true); }, spd);
+}
+function updatePlayBtn() {
+  var ico = document.getElementById('playIco');
+  var lbl = document.getElementById('playLbl');
+  var btn = document.getElementById('playBtn');
+  if (playing) {
+    ico.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    lbl.textContent = 'Pause'; btn.classList.add('is-pause');
+  } else {
+    ico.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    lbl.textContent = 'Play'; btn.classList.remove('is-pause');
+  }
+}
+document.getElementById('spd').addEventListener('change', function(){ if(playing) resetAuto(); });
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+function setLoading(on, msg) {
+  document.getElementById('loadBar').classList.toggle('on', on);
+  var lt = document.getElementById('loadTxt');
+  lt.classList.toggle('on', on && !!msg);
+  if (msg) lt.textContent = msg;
+}
+function showErr(msg) { var e=document.getElementById('errTxt'); e.textContent=msg; e.classList.add('on'); }
+function clearErr() { document.getElementById('errTxt').classList.remove('on'); }
+
+/* ════════════════════════════════
+   KEYBOARD
+════════════════════════════════ */
+document.addEventListener('keydown', function(e) {
+  if (!slides.length) return;
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') nxt();
+  else if (e.key==='ArrowLeft'||e.key==='ArrowUp') prev();
+  else if (e.key===' ') { e.preventDefault(); togglePlay(); }
+  else if (e.key==='f'||e.key==='F') toggleFS();
+});
+
+function toggleFS() {
+  var el = document.documentElement;
+  document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen && el.requestFullscreen();
+}
+
+/* ════════════════════════════════
+   BOOT — try bundled images first
+════════════════════════════════ */
+tryBundledSlides();
+</script>
+</body>
+</html>
