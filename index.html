@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12,7 +12,7 @@
   --text: #e8e8e8; --muted: #666; --accent: #185FA5;
   --green: #1D9E75; --red: #D94F4F; --r: 8px;
 }
-html, body { height: 100%; }
+html, body { height: 100%; width: 100%; }
 body {
   background: var(--bg); color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -74,24 +74,29 @@ body {
   padding: 12px 16px;
   background: var(--bg);
   flex-shrink: 0;
+  width: 100%;
 }
 .kpi-card {
   flex: 1;
   background: #ffffff;
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 .kpi-label {
   font-size: 11px;
   color: #666;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .kpi-value {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1;
 }
@@ -101,18 +106,22 @@ body {
 .kpi-sub {
   font-size: 10px;
   color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Hide KPIs during fullscreen to preserve space */
-:fullscreen .kpi-header { display: none; }
-
-/* ── MAIN ── */
+/* ── MAIN CONTAINER ── */
 .main {
-  flex: 1; display: flex; flex-direction: column;
-  overflow: hidden; position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
 }
 
-/* ── SPLASH (shown before slides load) ── */
+/* ── SPLASH ── */
 .splash {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -139,54 +148,75 @@ body {
 .err-txt { font-size: 11px; color: var(--red); display: none; max-width: 320px; text-align: center; line-height: 1.55; white-space: pre-wrap; }
 .err-txt.on { display: block; }
 
-/* ── VIEWER ── */
-.viewer { display: none; flex-direction: column; height: 100%; padding: 12px 16px 8px; gap: 8px; }
+/* ── RESPONSIVE VIEWER FRAME WORK ── */
+.viewer { 
+  display: none; 
+  flex-direction: column; 
+  height: 100%; 
+  width: 100%;
+  padding: 8px 16px; 
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
 .viewer.on { display: flex; }
 
-/* slide frame */
 .frame {
-  flex: 1; min-height: 0; display: flex;
-  align-items: center; justify-content: center; position: relative;
-  background: #fff; /* Solid white background canvas */
+  flex: 1; 
+  min-height: 0; 
+  width: 100%;
+  display: flex;
+  align-items: center; 
+  justify-content: center; 
+  position: relative;
+  background: #fff;
+  border-radius: var(--r);
+  box-shadow: 0 6px 40px rgba(0,0,0,0.75);
+  overflow: hidden;
 }
+
 .simg {
-  max-width: 100%; max-height: 100%; object-fit: contain;
-  background: #fff; /* Fallback direct canvas tint */
-  border-radius: var(--r); box-shadow: 0 6px 40px rgba(0,0,0,0.75);
-  display: block; transition: opacity 0.26s;
+  width: 100%;
+  height: 100%;
+  max-width: 100%; 
+  max-height: 100%; 
+  object-fit: contain; /* Scales images dynamically to fit layout heights */
+  background: #fff;
+  display: block; 
+  transition: opacity 0.22s;
 }
 .simg.fade { opacity: 0; }
 
 /* overlay arrows */
 .arrow {
   position: absolute; top: 50%; transform: translateY(-50%);
-  width: 36px; height: 56px; background: rgba(0,0,0,0.45);
-  border: none; border-radius: 6px; color: rgba(255,255,255,0.55);
+  width: 38px; height: 60px; background: rgba(0,0,0,0.5);
+  border: none; border-radius: 6px; color: rgba(255,255,255,0.6);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   opacity: 0; z-index: 5; transition: opacity 0.13s, background 0.12s;
 }
-.arrow svg { width: 18px; height: 18px; fill: currentColor; }
-.arrow.L { left: 8px; }
-.arrow.R { right: 8px; }
+.arrow svg { width: 20px; height: 20px; fill: currentColor; }
+.arrow.L { left: 12px; }
+.arrow.R { right: 12px; }
 .frame:hover .arrow { opacity: 1; }
-.arrow:hover { background: rgba(0,0,0,0.72); color: #fff; }
+.arrow:hover { background: rgba(0,0,0,0.8); color: #fff; }
 
 /* progress */
-.prog-rail { height: 2px; background: #1e1e1e; border-radius: 1px; flex-shrink: 0; }
-.prog-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.26s ease; }
+.prog-rail { height: 3px; background: #1e1e1e; border-radius: 1px; flex-shrink: 0; width: 100%; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.22s ease; }
 
 /* thumbnails */
 .thumbs {
-  display: flex; gap: 5px; overflow-x: auto; flex-shrink: 0;
-  padding-bottom: 2px; scrollbar-width: thin; scrollbar-color: #252525 transparent;
+  display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0;
+  padding-bottom: 4px; width: 100%; scrollbar-width: thin; scrollbar-color: #252525 transparent;
 }
-.thumbs::-webkit-scrollbar { height: 3px; }
+.thumbs::-webkit-scrollbar { height: 4px; }
 .thumbs::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
 .thumb {
-  flex-shrink: 0; width: 86px; border-radius: 4px; overflow: hidden;
+  flex-shrink: 0; width: 90px; border-radius: 4px; overflow: hidden;
   cursor: pointer; border: 2px solid transparent;
   transition: border-color 0.12s, transform 0.1s; position: relative;
-  background: #fff; /* Solid white background canvas for dynamic uploads */
+  background: #fff;
 }
 .thumb:hover { border-color: #3a3a3a; transform: translateY(-2px); }
 .thumb.on { border-color: var(--accent); }
@@ -198,28 +228,25 @@ body {
 }
 
 /* hint */
-.hint { font-size: 9px; color: #2e2e2e; text-align: center; flex-shrink: 0; padding-bottom: 2px; }
+.hint { font-size: 9px; color: #333; text-align: center; flex-shrink: 0; padding-bottom: 2px; width: 100%; }
 .hint kbd {
   background: #181818; border: 1px solid #252525; border-radius: 2px;
-  padding: 0 3px; font-size: 9px; color: #444; font-family: inherit;
+  padding: 0 3px; font-size: 9px; color: #555; font-family: inherit;
 }
 
 /* fullscreen tweaks */
-:fullscreen .topbar { display: none; }
-:fullscreen .thumbs, :fullscreen .hint, :fullscreen .prog-rail { display: none; }
+:fullscreen .topbar, :fullscreen .kpi-header, :fullscreen .thumbs, :fullscreen .hint, :fullscreen .prog-rail { display: none; }
 :fullscreen .viewer { padding: 0; }
-:fullscreen .simg { border-radius: 0; box-shadow: none; }
+:fullscreen .frame { border-radius: 0; box-shadow: none; }
 </style>
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
 <div class="topbar">
   <div class="tb-title" id="tbTitle">Cignetti Turnaround Dashboard <em id="tbSub"></em></div>
-
+  <button class="btn" onclick="clearSavedSession()" id="clearBtn" style="display:none; border-color:var(--red); color:var(--red);">Reset View</button>
   <div class="sep"></div>
 
-  <!-- Upload override -->
   <label class="upload-lbl" for="fileInput" title="Load a new .pptx to refresh slides">
     <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM12 17l-4-4h2.5v-4h3v4H16l-4 4z"/></svg>
     Load .pptx
@@ -229,7 +256,6 @@ body {
 
   <div class="sep"></div>
 
-  <!-- Speed -->
   <span class="spd-lbl">Interval</span>
   <select class="spd-sel" id="spd">
     <option value="3000">3 s</option>
@@ -242,7 +268,6 @@ body {
 
   <div class="sep"></div>
 
-  <!-- Nav -->
   <button class="btn" onclick="prev()" title="Previous (←)">
     <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
   </button>
@@ -251,22 +276,18 @@ body {
     <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
   </button>
 
-  <!-- Play/Pause -->
   <button class="btn btn-play" id="playBtn" onclick="togglePlay()">
     <svg id="playIco" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     <span id="playLbl">Play</span>
   </button>
 
-  <!-- Fullscreen -->
   <button class="btn" onclick="toggleFS()" title="Fullscreen (F)">
     <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
   </button>
 </div>
 
-<!-- ── MAIN ── -->
 <div class="main" id="main">
 
-  <!-- KPI HEADER BAR -->
   <div class="kpi-header" id="kpiHeader" style="display: none;">
     <div class="kpi-card">
       <div class="kpi-label">Design FDC S4</div>
@@ -295,7 +316,6 @@ body {
     </div>
   </div>
 
-  <!-- SPLASH -->
   <div class="splash" id="splash">
     <div class="splash-box" id="dropBox">
       <div class="splash-icon">📊</div>
@@ -315,7 +335,6 @@ body {
     <div class="err-txt" id="errTxt"></div>
   </div>
 
-  <!-- VIEWER -->
   <div class="viewer" id="viewer">
     <div class="frame" id="frame">
       <button class="arrow L" onclick="prev()" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
@@ -338,34 +357,58 @@ body {
 /* ════════════════════════════════
    STATE
 ════════════════════════════════ */
-var slides  = [];   // [{url, label}]
+var slides  = [];   
 var cur     = 0;
 var playing = false;
 var timer   = null;
 
-/* ════════════════════════════════
-   STRATEGY 1 — PRE-RENDERED JPEGS
-════════════════════════════════ */
 var SLIDE_LABELS = [
-  'Process Map',                    // slide 02
-  'FDC FPY — WW24',                 // slide 03
-  'FDC Pareto — WW24',              // slide 04
-  'SCV S10 FPY — WW24',             // slide 05
-  'SCV S10 Pareto — WW24',          // slide 06
-  'M1 Corp QA FPY — WW24',          // slide 07
-  'M1 Pareto — WW24',               // slide 08
-  'S14 FIV FPY — WW18–WW24',        // slide 09
-  'S14 FIV Pareto — WW18–WW24',     // slide 10
-  'M2 Corp QA FPY — WW24',          // slide 11
-  'M2 Pareto — WW24',               // slide 12
-  'S5 Permit Pack FPY',             // slide 13
-  'S5 Permit Pack Pareto',          // slide 14
-  'New Homes Process Map',          // slide 15
+  'Process Map', 'FDC FPY — WW24', 'FDC Pareto — WW24', 'SCV S10 FPY — WW24', 
+  'SCV S10 Pareto — WW24', 'M1 Corp QA FPY — WW24', 'M1 Pareto — WW24', 
+  'S14 FIV FPY — WW18–WW24', 'S14 FIV Pareto — WW18–WW24', 'M2 Corp QA FPY — WW24', 
+  'M2 Pareto — WW24', 'S5 Permit Pack FPY', 'S5 Permit Pack Pareto', 'New Homes Process Map'
 ];
+
+/* ════════════════════════════════
+   STORAGE CONTROLLER (Persistent across reloads)
+════════════════════════════════ */
+function saveSessionToStorage(name, slideData) {
+  try {
+    localStorage.setItem('cignetti_deck_name', name);
+    localStorage.setItem('cignetti_deck_slides', JSON.stringify(slideData));
+    document.getElementById('clearBtn').style.display = 'inline-flex';
+  } catch(e) {
+    console.warn("Deck too large to store permanently in browser memory cache.");
+  }
+}
+
+function clearSavedSession() {
+  localStorage.removeItem('cignetti_deck_name');
+  localStorage.removeItem('cignetti_deck_slides');
+  location.reload();
+}
+
+/* ════════════════════════════════
+   STRATEGY 1 — PRE-RENDERED OR CACHED SLIDES
+════════════════════════════════ */
+function bootDashboard() {
+  var savedName = localStorage.getItem('cignetti_deck_name');
+  var savedSlides = localStorage.getItem('cignetti_deck_slides');
+
+  if (savedName && savedSlides) {
+    // Restore session from upload history instead of looking for old files
+    slides = JSON.parse(savedSlides);
+    document.getElementById('fname').textContent = savedName;
+    document.getElementById('clearBtn').style.display = 'inline-flex';
+    document.getElementById('tbSub').textContent = savedName.replace('.pptx','') + ' (Cached)';
+    launchPresentation();
+  } else {
+    tryBundledSlides();
+  }
+}
 
 function tryBundledSlides() {
   setLoading(true, 'Loading pre-rendered slides…');
-
   var MAX_SLIDES = 60;
   var loaded = [];
   var pending = MAX_SLIDES - 1;
@@ -387,20 +430,12 @@ function tryBundledSlides() {
   function done() {
     pending--;
     if (pending > 0) return;
-    finish();
-  }
-
-  function finish() {
+    
     loaded.sort(function(a,b){ return a.slideNum - b.slideNum; });
     if (loaded.length >= 2) {
       slides = loaded;
       document.getElementById('tbSub').textContent = 'WW25 2026 · ' + slides.length + ' slides';
-      setLoading(false);
-      buildThumbs();
-      goTo(0, false);
-      document.getElementById('splash').classList.add('hidden');
-      document.getElementById('viewer').classList.add('on');
-      startPlay();
+      launchPresentation();
     } else {
       setLoading(false);
       tryPptxAuto();
@@ -408,179 +443,121 @@ function tryBundledSlides() {
   }
 }
 
-/* ════════════════════════════════
-   STRATEGY 2 — AUTO-FETCH PPTX
-════════════════════════════════ */
-var PPTX_CANDIDATES = [
-  'CIGNETTI_TURNAROUND_DASHBOARD_2-18.pptx',
-  'dashboard.pptx', 'turnaround.pptx', 'slides.pptx', 'presentation.pptx'
-];
-
 function tryPptxAuto() {
   setLoading(true, 'Looking for .pptx in folder…');
+  var candidates = ['CIGNETTI_TURNAROUND_DASHBOARD_2-18.pptx', 'dashboard.pptx', 'turnaround.pptx'];
   function tryNext(i) {
-    if (i >= PPTX_CANDIDATES.length) {
+    if (i >= candidates.length) {
       setLoading(false);
-      document.getElementById('splashSub').innerHTML =
-        'No slides found automatically.<br>Drop a <strong>.pptx</strong> here or click Browse below.';
+      document.getElementById('splashSub').innerHTML = 'No slides found automatically.<br>Drop a <strong>.pptx</strong> file here.';
       return;
     }
-    fetch(PPTX_CANDIDATES[i], {method:'HEAD'})
-      .then(function(r) {
-        if (!r.ok) { tryNext(i+1); return; }
-        var name = PPTX_CANDIDATES[i];
-        setLoading(true, 'Loading ' + name + '…');
-        fetch(name).then(function(res){ return res.blob(); }).then(function(blob) {
-          var f = new File([blob], name, {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
-          document.getElementById('fname').textContent = name;
-          parsePptx(f);
-        }).catch(function(){ tryNext(i+1); });
-      })
-      .catch(function(){ tryNext(i+1); });
+    fetch(candidates[i], {method:'HEAD'}).then(function(r) {
+      if (!r.ok) { tryNext(i+1); return; }
+      fetch(candidates[i]).then(function(res){ return res.blob(); }).then(function(blob) {
+        var f = new File([blob], candidates[i], {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+        parsePptx(f);
+      }).catch(function(){ tryNext(i+1); });
+    }).catch(function(){ tryNext(i+1); });
   }
   tryNext(0);
 }
 
 /* ════════════════════════════════
-   PPTX PARSING (JSZip)
+   PPTX CONVERSION ENGINE (Base64 optimized)
 ════════════════════════════════ */
 document.getElementById('fileInput').addEventListener('change', function(e) {
   var f = e.target.files[0]; if (f) parsePptx(f); this.value = '';
 });
 
-var mainEl = document.getElementById('main');
-var dropBox = document.getElementById('dropBox');
+// Drag & Drop bindings
 mainEl.addEventListener('dragover', function(e){ e.preventDefault(); dropBox.classList.add('drag'); });
 mainEl.addEventListener('dragleave', function(){ dropBox.classList.remove('drag'); });
 mainEl.addEventListener('drop', function(e){
   e.preventDefault(); dropBox.classList.remove('drag');
   var f = e.dataTransfer.files[0];
   if (f && f.name.toLowerCase().endsWith('.pptx')) parsePptx(f);
-  else showErr('Please drop a .pptx file.');
 });
 
 function parsePptx(file) {
+  clearErr(); setLoading(true, 'Processing ' + file.name + '…');
   document.getElementById('fname').textContent = file.name;
-  clearErr(); setLoading(true, 'Reading ' + file.name + '…');
 
   JSZip.loadAsync(file).then(function(zip) {
     return zip.file('ppt/presentation.xml').async('text').then(function(xml) {
       var sldMatch = xml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/);
-      var rIds = sldMatch
-        ? (sldMatch[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); })
-        : [];
+      var rIds = sldMatch ? (sldMatch[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); }) : [];
       return zip.file('ppt/_rels/presentation.xml.rels').async('text').then(function(rXml) {
-        var map = {};
-        var re = /Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
-        while ((m=re.exec(rXml))) {
-          if (m[2].indexOf('slides/slide')!==-1)
-            map[m[1]] = 'ppt/' + m[2].replace(/^\.\.\//,'');
-        }
+        var map = {}; var re = /Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
+        while ((m=re.exec(rXml))) { if (m[2].indexOf('slides/slide')!==-1) map[m[1]] = 'ppt/' + m[2].replace(/^\.\.\//,''); }
         var ordered = rIds.filter(function(id){ return map[id]; }).map(function(id){ return map[id]; });
         if (!ordered.length) {
-          ordered = Object.keys(zip.files)
-            .filter(function(n){ return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
-            .sort(function(a,b){ return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]); });
+          ordered = Object.keys(zip.files).filter(function(n){ return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
+                    .sort(function(a,b){ return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]); });
         }
         return ordered;
       });
     });
   }).then(function(ordered) {
     return JSZip.loadAsync(file).then(function(zip) {
-      setLoading(true, 'Extracting slide images…');
-      var targets = ordered.slice(1);
-
+      var targets = ordered.slice(1); // skip layout cover
       var promises = targets.map(function(sp, idx) {
-        var slideNum = idx + 2;
-        var sf = sp.split('/').pop();
-        var rp = 'ppt/slides/_rels/' + sf + '.rels';
-        var relsFile = zip.file(rp);
+        var slideNum = idx + 2; var sf = sp.split('/').pop();
+        var relsFile = zip.file('ppt/slides/_rels/' + sf + '.rels');
         if (!relsFile) return Promise.resolve(null);
 
         return relsFile.async('text').then(function(rXml) {
           var imgRe = /Type="[^"]*\/image"[^>]*Target="([^"]+)"/g, m, imgs=[];
           while ((m=imgRe.exec(rXml))) imgs.push('ppt/'+m[1].replace(/^\.\.\//,''));
-
-          var chartRe = /Type="[^"]*\/chart"[^>]*Target="([^"]+)"/g, cm, charts=[];
-          while ((cm=chartRe.exec(rXml))) charts.push('ppt/'+cm[1].replace(/^\.\.\//,''));
-
+          
           var pref = imgs.filter(function(p){ return /\.(png|jpg|jpeg)$/i.test(p); });
-          var gifs = imgs.filter(function(p){ return /\.gif$/i.test(p); });
-          var emfs = imgs.filter(function(p){ return /\.emf$/i.test(p); });
-          var chosen = pref.length ? pref[0] : gifs.length ? gifs[0] : emfs.length ? emfs[0] : null;
-
+          var chosen = pref.length ? pref[0] : (imgs[0] || null);
           if (!chosen) return Promise.resolve(null);
-          var imgFile = zip.file(chosen);
-          if (!imgFile) return Promise.resolve(null);
 
-          return imgFile.async('blob').then(function(blob) {
+          // Convert to Base64 data string so storage memory retains it across page refreshes
+          return zip.file(chosen).async('base64').then(function(b64) {
             var ext = chosen.split('.').pop().toLowerCase();
-            var mime = ext==='png'?'image/png':ext==='gif'?'image/gif':ext==='emf'?'image/x-emf':'image/jpeg';
-            var url = URL.createObjectURL(new Blob([blob],{type:mime}));
-            return { slideNum:slideNum, url:url, label:SLIDE_LABELS[idx]||('Slide '+slideNum) };
+            var mime = ext==='png'?'image/png':'image/jpeg';
+            var dataUrl = 'data:' + mime + ';base64,' + b64;
+            return { slideNum: slideNum, url: dataUrl, label: SLIDE_LABELS[idx] || ('Slide ' + slideNum) };
           });
         });
       });
-
-      return Promise.all(promises).then(function(res){ return {zip:zip, res:res, count:targets.length}; });
+      return Promise.all(promises);
     });
-  }).then(function(obj) {
-    var valid = obj.res.filter(Boolean);
-
-    if (valid.length < obj.count * 0.4) {
-      return JSZip.loadAsync(file).then(function(zip) {
-        var media = Object.keys(zip.files)
-          .filter(function(n){ return /^ppt\/media\/.*\.(png|jpg|jpeg|gif)$/i.test(n); })
-          .sort(function(a,b){ return a.localeCompare(b,undefined,{numeric:true}); });
-        var mp = media.map(function(p,i){
-          return zip.file(p).async('blob').then(function(b){
-            var ext=p.split('.').pop().toLowerCase();
-            var mime=ext==='png'?'image/png':ext==='gif'?'image/gif':'image/jpeg';
-            return {slideNum:i+2, url:URL.createObjectURL(new Blob([b],{type:mime})), label:SLIDE_LABELS[i]||('Slide '+(i+2))};
-          });
-        });
-        return Promise.all(mp);
-      });
-    }
-    return valid;
   }).then(function(finalSlides) {
-    slides = (finalSlides||[]).filter(Boolean).filter(function(s){ return s.url; });
+    slides = finalSlides.filter(Boolean);
     if (!slides.length) {
-      setLoading(false);
-      showErr('No renderable images found.\n\nThis deck uses embedded Excel charts that require server-side conversion.\n\nFix: In PowerPoint, right-click each chart → Copy → Paste Special as PNG, then re-upload.');
-      return;
+      setLoading(false); showErr('No renderable images found inside presentation structure.'); return;
     }
-    setLoading(false);
-    document.getElementById('tbSub').textContent = file.name.replace('.pptx','').replace(/_/g,' ') + ' · ' + slides.length + ' slides';
-    buildThumbs();
-    goTo(0, false);
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('viewer').classList.add('on');
-    startPlay();
+    saveSessionToStorage(file.name, slides);
+    document.getElementById('tbSub').textContent = file.name.replace('.pptx','') + ' · ' + slides.length + ' slides';
+    launchPresentation();
   }).catch(function(err){
-    setLoading(false);
-    showErr('Error reading PPTX:\n' + err.message);
-    console.error(err);
+    setLoading(false); showErr('Failed to read configuration: ' + err.message);
   });
 }
 
+function launchPresentation() {
+  setLoading(false);
+  buildThumbs();
+  goTo(0, false);
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('viewer').classList.add('on');
+  startPlay();
+}
+
 /* ════════════════════════════════
-   RENDER ENGINE
+   CORE VIEW CONTROLLER
 ════════════════════════════════ */
 function buildThumbs() {
-  var strip = document.getElementById('thumbs');
-  strip.innerHTML = '';
+  var strip = document.getElementById('thumbs'); strip.innerHTML = '';
   slides.forEach(function(s, i) {
-    var d = document.createElement('div');
-    d.className = 'thumb' + (i===0 ? ' on' : '');
-    d.title = s.label;
-    d.onclick = (function(idx){ return function(){ goTo(idx, true); if(playing) resetAuto(); }; })(i);
-    var img = document.createElement('img');
-    img.src = s.url; img.alt = s.label; img.loading = 'lazy';
-    var num = document.createElement('div');
-    num.className = 'thumb-n'; num.textContent = s.slideNum;
-    d.appendChild(img); d.appendChild(num);
-    strip.appendChild(d);
+    var d = document.createElement('div'); d.className = 'thumb' + (i===0 ? ' on' : ''); d.title = s.label;
+    d.onclick = function(){ goTo(i, true); if(playing) resetAuto(); };
+    var img = document.createElement('img'); img.src = s.url; img.loading = 'lazy';
+    var num = document.createElement('div'); num.className = 'thumb-n'; num.textContent = s.slideNum;
+    d.appendChild(img); d.appendChild(num); strip.appendChild(d);
   });
 }
 
@@ -590,22 +567,18 @@ function goTo(idx, animate) {
   var img = document.getElementById('sImg');
   if (animate) {
     img.classList.add('fade');
-    setTimeout(function(){ _applySlide(img); img.classList.remove('fade'); }, 240);
+    setTimeout(function(){ _applySlide(img); img.classList.remove('fade'); }, 140);
   } else {
     _applySlide(img);
   }
 }
 
 function _applySlide(img) {
-  var s = slides[cur];
-  img.src = s.url; img.alt = s.label;
-  
-  // Show the KPI block once slides are loaded and active
+  var s = slides[cur]; img.src = s.url;
   document.getElementById('kpiHeader').style.display = 'flex';
-  
   document.getElementById('sc').textContent = (cur+1) + ' / ' + slides.length;
-  var pct = slides.length > 1 ? (cur / (slides.length-1)) * 100 : 100;
-  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('prog').style.width = (slides.length > 1 ? (cur / (slides.length-1)) * 100 : 100) + '%';
+  
   document.querySelectorAll('.thumb').forEach(function(t,i){ t.classList.toggle('on', i===cur); });
   var at = document.querySelector('.thumb.on');
   if (at) at.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
@@ -615,49 +588,26 @@ function nxt() { goTo(cur+1, true); if(playing) resetAuto(); }
 function prev() { goTo(cur-1, true); if(playing) resetAuto(); }
 
 /* ════════════════════════════════
-   PLAYBACK
+   PLAYBACK & HELPERS
 ════════════════════════════════ */
-function startPlay() {
-  playing = true; updatePlayBtn(); resetAuto();
-}
-function togglePlay() {
-  playing = !playing; updatePlayBtn();
-  if (playing) resetAuto(); else { clearInterval(timer); timer = null; }
-}
-function resetAuto() {
-  clearInterval(timer);
-  var spd = parseInt(document.getElementById('spd').value);
-  timer = setInterval(function(){ goTo(cur+1, true); }, spd);
-}
+function startPlay() { playing = true; updatePlayBtn(); resetAuto(); }
+function togglePlay() { playing = !playing; updatePlayBtn(); if (playing) resetAuto(); else clearInterval(timer); }
+function resetAuto() { clearInterval(timer); timer = setInterval(nxt, parseInt(document.getElementById('spd').value)); }
+
 function updatePlayBtn() {
-  var ico = document.getElementById('playIco');
-  var lbl = document.getElementById('playLbl');
-  var btn = document.getElementById('playBtn');
+  var ico = document.getElementById('playIco'); var lbl = document.getElementById('playLbl'); var btn = document.getElementById('playBtn');
   if (playing) {
-    ico.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    lbl.textContent = 'Pause'; btn.classList.add('is-pause');
+    ico.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; lbl.textContent = 'Pause'; btn.classList.add('is-pause');
   } else {
-    ico.innerHTML = '<path d="M8 5v14l11-7z"/>';
-    lbl.textContent = 'Play'; btn.classList.remove('is-pause');
+    ico.innerHTML = '<path d="M8 5v14l11-7z"/>'; lbl.textContent = 'Play'; btn.classList.remove('is-pause');
   }
 }
-document.getElementById('spd').addEventListener('change', function(){ if(playing) resetAuto(); });
 
-/* ════════════════════════════════
-   HELPERS
-════════════════════════════════ */
-function setLoading(on, msg) {
-  document.getElementById('loadBar').classList.toggle('on', on);
-  var lt = document.getElementById('loadTxt');
-  lt.classList.toggle('on', on && !!msg);
-  if (msg) lt.textContent = msg;
-}
+document.getElementById('spd').addEventListener('change', function(){ if(playing) resetAuto(); });
+function setLoading(on, msg) { document.getElementById('loadBar').classList.toggle('on', on); var lt = document.getElementById('loadTxt'); lt.classList.toggle('on', on && !!msg); if (msg) lt.textContent = msg; }
 function showErr(msg) { var e=document.getElementById('errTxt'); e.textContent=msg; e.classList.add('on'); }
 function clearErr() { document.getElementById('errTxt').classList.remove('on'); }
 
-/* ════════════════════════════════
-   KEYBOARD
-════════════════════════════════ */
 document.addEventListener('keydown', function(e) {
   if (!slides.length) return;
   if (e.key==='ArrowRight'||e.key==='ArrowDown') nxt();
@@ -666,15 +616,10 @@ document.addEventListener('keydown', function(e) {
   else if (e.key==='f'||e.key==='F') toggleFS();
 });
 
-function toggleFS() {
-  var el = document.documentElement;
-  document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen && el.requestFullscreen();
-}
+function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
 
-/* ════════════════════════════════
-   BOOT
-════════════════════════════════ */
-tryBundledSlides();
+// Ignition
+bootDashboard();
 </script>
 </body>
 </html>
