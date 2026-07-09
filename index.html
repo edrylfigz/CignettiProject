@@ -6,16 +6,16 @@
 <title>Cignetti Turnaround Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 :root {
-  --bg: #0d0d0d; --surface: #161616; --border: #252525;
-  --text: #e8e8e8; --muted: #666; --accent: #185FA5;
-  --green: #1D9E75; --red: #D94F4F; --amber: #BA7517; --r: 8px;
+  --bg:#0d0d0d; --surface:#161616; --border:#252525;
+  --text:#e8e8e8; --muted:#666; --accent:#185FA5;
+  --green:#1D9E75; --red:#D94F4F; --amber:#BA7517; --r:8px;
 }
-html, body { height: 100%; overflow: hidden; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; flex-direction: column; }
+html,body { height:100%; overflow:hidden; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; }
 
-/* ── TOPBAR ── */
+/* TOPBAR */
 .topbar { display:flex; align-items:center; gap:8px; padding:7px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; min-height:46px; }
 .tb-title { font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:80px; }
 .tb-title em { color:var(--muted); font-style:normal; font-size:11px; font-weight:400; margin-left:6px; }
@@ -23,67 +23,95 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .btn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:11px; cursor:pointer; font-family:inherit; transition:all 0.12s; white-space:nowrap; }
 .btn:hover { background:#222; color:var(--text); border-color:#3a3a3a; }
 .btn svg { width:12px; height:12px; fill:currentColor; }
-.btn-play { background:var(--accent); border-color:var(--accent); color:#fff; }
-.btn-play:hover { background:#1a6fb8; border-color:#1a6fb8; }
+.btn-play  { background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn-play:hover { background:#1a6fb8; }
 .btn-play.paused { background:var(--red); border-color:var(--red); }
+.btn-gh   { background:#238636; border-color:#238636; color:#fff; }
+.btn-gh:hover { background:#2ea043; border-color:#2ea043; }
+.btn-gh:disabled { background:#1a3a1f; border-color:#1a3a1f; color:#4a7a4f; cursor:default; }
 .upload-lbl { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:20px; border:1px dashed #333; background:transparent; color:var(--muted); font-size:11px; cursor:pointer; transition:all 0.12s; }
 .upload-lbl:hover { border-color:var(--accent); color:var(--accent); }
 .upload-lbl svg { width:12px; height:12px; fill:currentColor; }
 #fileInput { display:none; }
-.fname { font-size:10px; color:var(--green); max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fname { font-size:10px; color:var(--green); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .spd-sel { background:#1e1e1e; border:1px solid var(--border); color:var(--text); font-size:11px; padding:4px 6px; border-radius:6px; cursor:pointer; font-family:inherit; }
 .sc { font-size:12px; color:var(--muted); min-width:44px; text-align:center; font-variant-numeric:tabular-nums; }
 
-/* ── KPI HEADER ── */
+/* GITHUB SETTINGS MODAL */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; display:flex; align-items:center; justify-content:center; }
+.modal-backdrop.hidden { display:none; }
+.modal { background:#1a1a1a; border:1px solid var(--border); border-radius:14px; padding:28px 32px; width:480px; max-width:94vw; display:flex; flex-direction:column; gap:16px; }
+.modal h2 { font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.modal h2 svg { width:18px; height:18px; fill:#238636; }
+.modal p  { font-size:12px; color:var(--muted); line-height:1.6; }
+.modal a  { color:var(--accent); text-decoration:none; }
+.modal a:hover { text-decoration:underline; }
+.field { display:flex; flex-direction:column; gap:5px; }
+.field label { font-size:11px; color:var(--muted); font-weight:500; letter-spacing:0.3px; }
+.field input { background:#111; border:1px solid var(--border); color:var(--text); font-size:12px; padding:8px 11px; border-radius:8px; font-family:inherit; outline:none; transition:border-color 0.12s; }
+.field input:focus { border-color:var(--accent); }
+.field input::placeholder { color:#444; }
+.field .hint-txt { font-size:10px; color:#444; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+.btn-save { background:var(--accent); border-color:var(--accent); color:#fff; padding:7px 18px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:none; font-family:inherit; transition:background 0.12s; }
+.btn-save:hover { background:#1a6fb8; }
+.btn-cancel { background:transparent; border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:8px; font-size:12px; cursor:pointer; font-family:inherit; transition:all 0.12s; }
+.btn-cancel:hover { background:#222; color:var(--text); }
+.gh-status { font-size:11px; display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:8px; }
+.gh-status.idle    { background:#1a1a1a; color:var(--muted); border:1px solid var(--border); }
+.gh-status.working { background:#0d2137; color:#5ba3e0; border:1px solid #1a4a7a; }
+.gh-status.ok      { background:#0d2a1a; color:#3fb868; border:1px solid #1a5a2a; }
+.gh-status.err     { background:#2a0d0d; color:#e07070; border:1px solid #5a1a1a; }
+.gh-status svg     { width:13px; height:13px; fill:currentColor; flex-shrink:0; }
+.gh-dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.spin { animation:spin 1s linear infinite; display:inline-block; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.progress-detail { font-size:10px; color:#444; margin-top:2px; }
+
+/* KPI HEADER */
 .kpi-header { flex-shrink:0; padding:12px 20px 10px; background:var(--surface); border-bottom:1px solid var(--border); }
 .kpi-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
-.kpi-h1 { font-size:16px; font-weight:700; line-height:1.3; }
+.kpi-h1  { font-size:16px; font-weight:700; line-height:1.3; }
 .kpi-meta { font-size:11px; color:var(--muted); margin-top:3px; display:flex; flex-wrap:wrap; gap:0; }
 .kpi-meta span::after { content:' · '; }
 .kpi-meta span:last-child::after { content:''; }
 .kpi-badge { background:var(--green); color:#fff; font-size:11px; font-weight:700; padding:6px 16px; border-radius:20px; white-space:nowrap; flex-shrink:0; letter-spacing:0.3px; }
 .kpi-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px; }
-.kpi-card { background:#1c1c1c; border:1px solid var(--border); border-radius:10px; padding:10px 13px; min-width:0; transition:border-color 0.2s; }
+.kpi-card  { background:#1c1c1c; border:1px solid var(--border); border-radius:10px; padding:10px 13px; min-width:0; transition:border-color 0.2s; }
 .kpi-card:hover { border-color:#3a3a3a; }
-.kpi-lbl { font-size:10.5px; color:var(--muted); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-val { font-size:26px; font-weight:700; line-height:1; }
+.kpi-lbl  { font-size:10.5px; color:var(--muted); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi-val  { font-size:26px; font-weight:700; line-height:1; }
 .kpi-foot { font-size:10px; color:#555; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .c-red { color:var(--red); } .c-amber { color:var(--amber); } .c-green { color:var(--green); } .c-gray { color:#555; }
-
-/* ── FIG NAV ── */
 .fig-nav { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .fig-pill { font-size:11.5px; padding:7px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; white-space:nowrap; transition:all 0.12s; flex-shrink:0; }
 .fig-pill:hover { background:#222; color:var(--text); border-color:#3a3a3a; }
 .fig-pill.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-/* ── MAIN ── */
+/* MAIN */
 .main { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; min-height:0; }
-
-/* ── SPLASH ── */
 .splash { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); z-index:20; flex-direction:column; gap:18px; }
 .splash.hidden { display:none; }
 .splash-box { border:2px dashed #252525; border-radius:14px; padding:36px 52px; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; max-width:440px; width:90%; transition:border-color 0.18s,background 0.18s; }
 .splash-box.drag { border-color:var(--accent); background:rgba(24,95,165,0.07); }
-.splash-icon { font-size:36px; }
+.splash-icon  { font-size:36px; }
 .splash-title { font-size:17px; font-weight:600; }
-.splash-sub { font-size:12px; color:var(--muted); line-height:1.65; }
-.splash-or { font-size:10px; color:#333; }
+.splash-sub   { font-size:12px; color:var(--muted); line-height:1.65; }
+.splash-or    { font-size:10px; color:#333; }
 .bar-wrap { width:220px; height:3px; background:#1e1e1e; border-radius:2px; overflow:hidden; display:none; }
 .bar-wrap.on { display:block; }
 .bar-fill { height:100%; background:var(--accent); border-radius:2px; animation:lp 1.1s ease-in-out infinite; }
 @keyframes lp { 0%{width:0;margin-left:0} 50%{width:55%;margin-left:15%} 100%{width:0;margin-left:100%} }
 .load-msg { font-size:11px; color:var(--muted); display:none; }
 .load-msg.on { display:block; }
-.err-msg { font-size:11px; color:var(--red); display:none; max-width:340px; text-align:center; line-height:1.55; white-space:pre-wrap; }
-.err-msg.on { display:block; }
-
-/* ── VIEWER ── */
+.err-msg  { font-size:11px; color:var(--red); display:none; max-width:340px; text-align:center; line-height:1.55; white-space:pre-wrap; }
+.err-msg.on  { display:block; }
 .viewer { display:none; flex-direction:column; flex:1; min-height:0; padding:10px 16px 6px; gap:7px; }
 .viewer.on { display:flex; }
-.frame { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; position:relative; }
-.simg { max-width:100%; max-height:100%; object-fit:contain; border-radius:var(--r); box-shadow:0 6px 40px rgba(0,0,0,0.75); display:block; transition:opacity 0.24s; }
+.frame  { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; position:relative; }
+.simg   { max-width:100%; max-height:100%; object-fit:contain; border-radius:var(--r); box-shadow:0 6px 40px rgba(0,0,0,0.75); display:block; transition:opacity 0.24s; }
 .simg.fade { opacity:0; }
-.arrow { position:absolute; top:50%; transform:translateY(-50%); width:36px; height:54px; background:rgba(0,0,0,0.45); border:none; border-radius:6px; color:rgba(255,255,255,0.55); cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; z-index:5; transition:opacity 0.13s; }
+.arrow  { position:absolute; top:50%; transform:translateY(-50%); width:36px; height:54px; background:rgba(0,0,0,0.45); border:none; border-radius:6px; color:rgba(255,255,255,0.55); cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; z-index:5; transition:opacity 0.13s; }
 .arrow svg { width:18px; height:18px; fill:currentColor; }
 .arrow.L { left:8px; } .arrow.R { right:8px; }
 .frame:hover .arrow { opacity:1; }
@@ -92,36 +120,81 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .prog-fill { height:100%; background:var(--accent); border-radius:1px; transition:width 0.24s ease; }
 .thumbs { display:flex; gap:5px; overflow-x:auto; flex-shrink:0; padding-bottom:2px; scrollbar-width:thin; scrollbar-color:#252525 transparent; }
 .thumbs::-webkit-scrollbar { height:3px; } .thumbs::-webkit-scrollbar-thumb { background:#252525; border-radius:2px; }
-.thumb { flex-shrink:0; width:80px; border-radius:4px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.12s,transform 0.1s; position:relative; }
+.thumb  { flex-shrink:0; width:80px; border-radius:4px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.12s,transform 0.1s; position:relative; }
 .thumb:hover { border-color:#3a3a3a; transform:translateY(-1px); }
 .thumb.on { border-color:var(--accent); }
 .thumb img { width:100%; display:block; }
-.thumb-n { position:absolute; bottom:2px; right:3px; font-size:8px; color:rgba(255,255,255,0.8); background:rgba(0,0,0,0.6); padding:1px 3px; border-radius:2px; }
+.thumb-n   { position:absolute; bottom:2px; right:3px; font-size:8px; color:rgba(255,255,255,0.8); background:rgba(0,0,0,0.6); padding:1px 3px; border-radius:2px; }
 .hint { font-size:9px; color:#2e2e2e; text-align:center; flex-shrink:0; }
 .hint kbd { background:#181818; border:1px solid #252525; border-radius:2px; padding:0 3px; font-size:9px; color:#444; font-family:inherit; }
-
-/* fullscreen */
 :fullscreen .topbar, :fullscreen .kpi-header { display:none; }
 :fullscreen .viewer { padding:0; }
 :fullscreen .thumbs, :fullscreen .hint, :fullscreen .prog-rail { display:none; }
 :fullscreen .simg { border-radius:0; box-shadow:none; }
-
 @media(max-width:900px) { .kpi-cards { grid-template-columns:repeat(3,1fr); } }
 @media(max-width:600px) { .kpi-cards { grid-template-columns:repeat(2,1fr); } .kpi-h1 { font-size:14px; } }
 </style>
 </head>
 <body>
 
+<!-- GITHUB SETTINGS MODAL -->
+<div class="modal-backdrop hidden" id="ghModal">
+  <div class="modal">
+    <h2>
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.745 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub Auto-Publish Settings
+    </h2>
+    <p>When you load a new .pptx, the site will automatically push the file and rendered slide images to your GitHub repo — so the live site always stays current.</p>
+    <p>Create a token at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> → <strong>Fine-grained token</strong> → Repository: <em>Contents</em> = Read & Write.</p>
+    <div class="field">
+      <label>GITHUB USERNAME</label>
+      <input id="ghUser" type="text" placeholder="e.g. markkevinolivar" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>REPOSITORY NAME</label>
+      <input id="ghRepo" type="text" placeholder="e.g. cignetti-dashboard" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>BRANCH</label>
+      <input id="ghBranch" type="text" placeholder="main" value="main" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>PERSONAL ACCESS TOKEN</label>
+      <input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off">
+      <span class="hint-txt">Stored only in your browser's localStorage. Never sent anywhere except api.github.com.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeGhModal()">Cancel</button>
+      <button class="btn-save"   onclick="saveGhSettings()">Save & Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-title">Cignetti Turnaround <em id="tbSub"></em></div>
   <div class="sep"></div>
+
   <label class="upload-lbl" for="fileInput" title="Load new .pptx to refresh">
     <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM12 17l-4-4h2.5v-4h3v4H16l-4 4z"/></svg>
     Load .pptx
   </label>
   <input type="file" id="fileInput" accept=".pptx">
   <span class="fname" id="fname"></span>
+
+  <!-- GitHub push button + status -->
+  <div class="sep"></div>
+  <button class="btn btn-gh" id="ghPushBtn" onclick="pushToGithub()" disabled title="Load a .pptx first, then push to GitHub">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.745 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+    Push to GitHub
+  </button>
+  <button class="btn" onclick="openGhModal()" title="GitHub settings">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+  </button>
+  <div id="ghStatusBar" class="gh-status idle" style="display:none">
+    <span class="gh-dot"></span><span id="ghStatusTxt"></span>
+  </div>
+
   <div class="sep"></div>
   <span style="font-size:10px;color:var(--muted)">Interval</span>
   <select class="spd-sel" id="spd">
@@ -151,29 +224,24 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
     <div>
       <div class="kpi-h1">SunPower Direct — Quality Initiative FPY = 100%</div>
       <div class="kpi-meta" id="kpiMeta">
-        <span>Memo SSB-217D</span>
-        <span>Author: SSB</span>
-        <span id="kpiWW">Loading…</span>
-        <span>Target: Zero Defects</span>
+        <span>Memo SSB-217D</span><span>Author: SSB</span>
+        <span id="kpiWW">Loading…</span><span>Target: Zero Defects</span>
       </div>
     </div>
     <div class="kpi-badge">FPY TARGET 100%</div>
   </div>
   <div class="kpi-cards" id="kpiCards">
-    <!-- populated by parseSlide2 -->
     <div class="kpi-card"><div class="kpi-lbl">Design FDC S4</div><div class="kpi-val c-gray">—</div><div class="kpi-foot">Loading…</div></div>
     <div class="kpi-card"><div class="kpi-lbl">SCV S10</div><div class="kpi-val c-gray">—</div><div class="kpi-foot">Loading…</div></div>
     <div class="kpi-card"><div class="kpi-lbl">Install M1 S11</div><div class="kpi-val c-gray">—</div><div class="kpi-foot">Loading…</div></div>
     <div class="kpi-card"><div class="kpi-lbl">FIV S14</div><div class="kpi-val c-gray">—</div><div class="kpi-foot">Loading…</div></div>
     <div class="kpi-card"><div class="kpi-lbl">PTO S15</div><div class="kpi-val c-gray">—</div><div class="kpi-foot">Loading…</div></div>
   </div>
-  <div class="fig-nav" id="figNav"><!-- populated after slides load --></div>
+  <div class="fig-nav" id="figNav"></div>
 </div>
 
 <!-- MAIN -->
 <div class="main" id="main">
-
-  <!-- SPLASH -->
   <div class="splash" id="splash">
     <div class="splash-box" id="dropBox">
       <div class="splash-icon">📊</div>
@@ -187,10 +255,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
     </div>
     <div class="bar-wrap" id="barWrap"><div class="bar-fill"></div></div>
     <div class="load-msg" id="loadMsg"></div>
-    <div class="err-msg" id="errMsg"></div>
+    <div class="err-msg"  id="errMsg"></div>
   </div>
 
-  <!-- VIEWER -->
   <div class="viewer" id="viewer">
     <div class="frame" id="frame">
       <button class="arrow L" onclick="prev()"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
@@ -204,31 +271,233 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 </div>
 
 <script>
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    STATE
-════════════════════════════════════════════════════ */
-var slides  = [];   // [{url, slideNum, title}]
-var figGroups = []; // [{label, startIdx}] — built from slide titles
-var cur     = 0;
-var playing = false;
-var timer   = null;
+═══════════════════════════════════════════════════ */
+var slides    = [];   // [{url, slideNum, title, blob}]
+var figGroups = [];
+var cur       = 0;
+var playing   = false;
+var timer     = null;
+var _loadedPptxBlob = null;   // raw PPTX blob kept for GitHub push
+var _loadedPptxName = null;   // filename
 
-/* ════════════════════════════════════════════════════
-   SLIDE 2 TABLE PARSER
-   Reads ppt/slides/slide2.xml from the zip,
-   finds the <a:tbl> element, parses rows into cells,
-   then locates S4, S10, S11, S14, S15 rows and reads
-   the RIGHTMOST non-empty cell value as the latest FPY.
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   GITHUB SETTINGS — persisted in localStorage
+═══════════════════════════════════════════════════ */
+function ghSettings() {
+  return {
+    user:   localStorage.getItem('gh_user')   || '',
+    repo:   localStorage.getItem('gh_repo')   || '',
+    branch: localStorage.getItem('gh_branch') || 'main',
+    token:  localStorage.getItem('gh_token')  || ''
+  };
+}
+function openGhModal() {
+  var s = ghSettings();
+  document.getElementById('ghUser').value   = s.user;
+  document.getElementById('ghRepo').value   = s.repo;
+  document.getElementById('ghBranch').value = s.branch || 'main';
+  document.getElementById('ghToken').value  = s.token;
+  document.getElementById('ghModal').classList.remove('hidden');
+}
+function closeGhModal() {
+  document.getElementById('ghModal').classList.add('hidden');
+}
+function saveGhSettings() {
+  localStorage.setItem('gh_user',   document.getElementById('ghUser').value.trim());
+  localStorage.setItem('gh_repo',   document.getElementById('ghRepo').value.trim());
+  localStorage.setItem('gh_branch', document.getElementById('ghBranch').value.trim() || 'main');
+  localStorage.setItem('gh_token',  document.getElementById('ghToken').value.trim());
+  closeGhModal();
+  setGhStatus('idle', 'Settings saved');
+}
+document.getElementById('ghModal').addEventListener('click', function(e) {
+  if (e.target === this) closeGhModal();
+});
+
+/* ═══════════════════════════════════════════════════
+   GITHUB STATUS BAR
+═══════════════════════════════════════════════════ */
+function setGhStatus(state, msg) {
+  var bar = document.getElementById('ghStatusBar');
+  var txt = document.getElementById('ghStatusTxt');
+  bar.style.display = 'flex';
+  bar.className = 'gh-status ' + state;
+  txt.innerHTML = state === 'working'
+    ? '<span class="spin">⟳</span> ' + msg
+    : msg;
+  if (state === 'ok' || state === 'idle') {
+    setTimeout(function(){ bar.style.display = 'none'; }, 5000);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   GITHUB API HELPERS
+═══════════════════════════════════════════════════ */
+function ghApi(path, method, body) {
+  var s = ghSettings();
+  if (!s.token || !s.user || !s.repo) {
+    return Promise.reject(new Error('GitHub not configured. Click ⚙ to set up.'));
+  }
+  var url = 'https://api.github.com/repos/' + s.user + '/' + s.repo + path;
+  var opts = {
+    method: method || 'GET',
+    headers: {
+      'Authorization': 'token ' + s.token,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(url, opts).then(function(r) {
+    if (r.status === 404) return null;   // file doesn't exist yet
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.message || r.statusText); });
+    if (r.status === 204 || method === 'DELETE') return null;
+    return r.json();
+  });
+}
+
+/* Get current SHA of a file (needed for updates) */
+function getFileSha(path) {
+  var s = ghSettings();
+  return ghApi('/contents/' + path).then(function(data) {
+    return data ? data.sha : null;
+  });
+}
+
+/* Push a single file. content = base64 string */
+function pushFile(repoPath, contentBase64, message, sha) {
+  var s = ghSettings();
+  var body = {
+    message: message,
+    content: contentBase64,
+    branch:  s.branch || 'main'
+  };
+  if (sha) body.sha = sha;
+  return ghApi('/contents/' + repoPath, 'PUT', body);
+}
+
+/* Convert Blob to base64 */
+function blobToBase64(blob) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload  = function() { resolve(reader.result.split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/* Convert an image URL (object URL) to a JPEG Blob via canvas */
+function urlToJpegBlob(url) {
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      canvas.toBlob(function(b) {
+        b ? resolve(b) : reject(new Error('Canvas toBlob failed'));
+      }, 'image/jpeg', 0.92);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   GITHUB PUSH — main entry point
+   Called automatically after a PPTX loads, or
+   manually via the "Push to GitHub" button.
+═══════════════════════════════════════════════════ */
+function pushToGithub() {
+  var s = ghSettings();
+  if (!s.token || !s.user || !s.repo) {
+    openGhModal();
+    return;
+  }
+  if (!_loadedPptxBlob || !slides.length) {
+    setGhStatus('err', 'No file loaded yet.');
+    return;
+  }
+
+  var btn = document.getElementById('ghPushBtn');
+  btn.disabled = true;
+  setGhStatus('working', 'Connecting to GitHub…');
+
+  var pptxName = _loadedPptxName;
+  var totalFiles = 1 + slides.length; // PPTX + all slide images
+  var done = 0;
+
+  function progress(label) {
+    done++;
+    setGhStatus('working', label + ' (' + done + '/' + totalFiles + ')');
+  }
+
+  // Step 1: push the PPTX file
+  blobToBase64(_loadedPptxBlob).then(function(b64) {
+    setGhStatus('working', 'Pushing ' + pptxName + '…');
+    return getFileSha(pptxName).then(function(sha) {
+      return pushFile(pptxName, b64, 'Update ' + pptxName, sha);
+    });
+  }).then(function() {
+    progress('Pushed ' + pptxName);
+
+    // Step 2: push slide images sequentially to avoid API rate limits
+    var chain = Promise.resolve();
+    slides.forEach(function(s, i) {
+      chain = chain.then(function() {
+        var pad  = s.slideNum < 10 ? '0' + s.slideNum : '' + s.slideNum;
+        var name = 'slides/slide-' + pad + '.jpg';
+        setGhStatus('working', 'Pushing ' + name + '… (' + (i + 1) + '/' + slides.length + ')');
+
+        // Convert the object-URL to a JPEG blob
+        var blobPromise;
+        if (s.blob) {
+          blobPromise = Promise.resolve(s.blob);
+        } else {
+          blobPromise = urlToJpegBlob(s.url);
+        }
+
+        return blobPromise.then(function(jpegBlob) {
+          return blobToBase64(jpegBlob);
+        }).then(function(b64) {
+          return getFileSha(name).then(function(sha) {
+            return pushFile(name, b64, 'Update ' + name, sha);
+          });
+        }).then(function() {
+          progress('Pushed ' + name);
+        }).catch(function(e) {
+          console.warn('Slide push failed:', name, e);
+          done++; // count it anyway so we finish
+        });
+      });
+    });
+
+    return chain;
+  }).then(function() {
+    btn.disabled = false;
+    setGhStatus('ok', '✓ All files pushed to ' + s.user + '/' + s.repo + ' — GitHub Pages will rebuild in ~60 s');
+  }).catch(function(err) {
+    btn.disabled = false;
+    var msg = err.message || String(err);
+    if (msg.indexOf('configured') !== -1) openGhModal();
+    setGhStatus('err', '✗ ' + msg);
+    console.error('GitHub push error:', err);
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIDE 2 TABLE PARSER — extracts KPI values
+═══════════════════════════════════════════════════ */
 function parseSlide2(zip, slide2Path) {
   return zip.file(slide2Path).async('text').then(function(xml) {
-
-    // ── 1. Extract table XML ──
     var tblMatch = xml.match(/<a:tbl>([\s\S]*?)<\/a:tbl>/);
     if (!tblMatch) return null;
     var tblXml = tblMatch[1];
 
-    // ── 2. Split into rows then cells, joining all <a:t> runs within each cell ──
     var rows = [];
     var rowRe = /<a:tr\b[^>]*>([\s\S]*?)<\/a:tr>/g, rm;
     while ((rm = rowRe.exec(tblXml)) !== null) {
@@ -236,40 +505,16 @@ function parseSlide2(zip, slide2Path) {
       var cellRe = /<a:tc>([\s\S]*?)<\/a:tc>/g, cm;
       while ((cm = cellRe.exec(rm[1])) !== null) {
         var runs = cm[1].match(/<a:t>([^<]*)<\/a:t>/g) || [];
-        var text = runs.map(function(r){ return r.replace(/<a:t>|<\/a:t>/g,''); }).join('').trim();
-        cells.push(text);
+        cells.push(runs.map(function(r){ return r.replace(/<a:t>|<\/a:t>/g,''); }).join('').trim());
       }
       rows.push(cells);
     }
 
-    // ── 3. Detect header row — find which row holds "WW" week labels
-    //       These are the last two column headers, e.g. ["WW25","WW26"]
-    //       We use this to identify how many FPY columns exist and which is rightmost.
-    var wwRow = rows.find(function(r){
-      return r.some(function(c){ return /^WW\d+/.test(c); });
-    });
+    var wwRow = rows.find(function(r){ return r.some(function(c){ return /^WW\d+/.test(c); }); });
     var wwCols = wwRow ? wwRow.filter(function(c){ return /^WW\d+/.test(c); }) : [];
     var latestWW = wwCols.length ? wwCols[wwCols.length - 1] : 'Latest';
-
-    // Update the "data through" label in the header
     document.getElementById('kpiWW').textContent = 'Data through ' + latestWW + ' 2026';
 
-    // ── 4. For each target stage, find its row(s) and extract rightmost FPY ──
-    //       A row "belongs" to a stage when one of its cells exactly matches the stage ID.
-    //       Some stages span multiple merged rows so we also look at the immediate
-    //       following rows that have no stage prefix (they inherit the same stage).
-
-    var TARGET_STAGES = [
-      { id: 'S4',  label: 'Design FDC S4',  specCol: 7 },
-      { id: 'S10', label: 'SCV S10',         specCol: 7 },
-      { id: 'S11', label: 'Install M1 S11',  specCol: 7 },
-      { id: 'S14', label: 'FIV S14',         specCol: 7 },
-      { id: 'S15', label: 'PTO S15',         specCol: 7 },
-    ];
-
-    // Build a map: stageId -> all rows that belong to it
-    // A row belongs to a stage if col[1] === stageId, OR if it's a continuation
-    // row (col[1] empty or not a stage code) following a stage row.
     var STAGE_RE = /^S\d+$/;
     var stageRowMap = {};
     var currentStage = null;
@@ -279,131 +524,73 @@ function parseSlide2(zip, slide2Path) {
         currentStage = stageCell;
         if (!stageRowMap[currentStage]) stageRowMap[currentStage] = [];
         stageRowMap[currentStage].push(r);
-      } else if (currentStage && r.length > 2) {
-        // continuation row — also check col[0]: if it's a T-level, new stage block starts
-        var col0 = r[0] || '';
-        if (/^T\d+$/.test(col0)) {
-          currentStage = null; // new block without stage ID (shouldn't happen, but guard)
-        } else {
-          stageRowMap[currentStage].push(r);
-        }
+      } else if (currentStage && r.length > 2 && !/^T\d+$/.test(r[0] || '')) {
+        stageRowMap[currentStage].push(r);
       }
     });
 
-    // For each target, extract rightmost non-empty value that looks like an FPY
     var FPY_RE = /^\d{1,3}%|^Investigating/i;
-    function getRightmostFpy(stageId) {
-      var stageRows = stageRowMap[stageId];
-      if (!stageRows || !stageRows.length) return null;
-      // Collect all cells across all rows for this stage, reversed
-      // The rightmost FPY in the LAST data row is the latest week
+    function getRightmostFpy(id) {
+      var stageRows = stageRowMap[id]; if (!stageRows || !stageRows.length) return null;
       var lastRow = stageRows[stageRows.length - 1];
-      // Walk cells right-to-left, find first FPY-looking value
-      for (var i = lastRow.length - 1; i >= 0; i--) {
-        if (FPY_RE.test(lastRow[i])) return lastRow[i];
-      }
-      // Fallback: check first row
+      for (var i = lastRow.length - 1; i >= 0; i--) { if (FPY_RE.test(lastRow[i])) return lastRow[i]; }
       var firstRow = stageRows[0];
-      for (var j = firstRow.length - 1; j >= 0; j--) {
-        if (FPY_RE.test(firstRow[j])) return firstRow[j];
-      }
+      for (var j = firstRow.length - 1; j >= 0; j--) { if (FPY_RE.test(firstRow[j])) return firstRow[j]; }
       return null;
     }
-
-    function getSpec(stageId, fallback) {
-      var stageRows = stageRowMap[stageId];
-      if (!stageRows || !stageRows.length) return fallback;
-      // Spec is typically Level 3 column (index 7 or 6) — find a 5-digit number
-      var all = stageRows.reduce(function(a,r){ return a.concat(r); }, []);
-      var spec = all.find(function(c){ return /^\d{5}/.test(c) && c !== '12885' && c !== '12777'; });
-      return spec || fallback;
+    function getSpec(id, fb) {
+      var rows2 = stageRowMap[id]; if (!rows2) return fb;
+      var flat = rows2.reduce(function(a,r){ return a.concat(r); }, []);
+      return flat.find(function(c){ return /^\d{5}/.test(c) && c !== '12885' && c !== '12777'; }) || fb;
     }
 
-    var SPEC_FALLBACKS = { S4:'10470', S10:'10496', S11:'12285', S14:'12807', S15:'11143' };
-
-    var results = TARGET_STAGES.map(function(ts) {
-      var fpy = getRightmostFpy(ts.id) || '—';
-      var spec = getSpec(ts.id, SPEC_FALLBACKS[ts.id]);
-      return { label: ts.label, fpy: fpy, spec: spec, ww: latestWW };
+    var SPECS = { S4:'10470', S10:'10496', S11:'12285', S14:'12807', S15:'11143' };
+    var targets = [
+      { id:'S4',  label:'Design FDC S4'  },
+      { id:'S10', label:'SCV S10'         },
+      { id:'S11', label:'Install M1 S11'  },
+      { id:'S14', label:'FIV S14'         },
+      { id:'S15', label:'PTO S15'         }
+    ];
+    var results = targets.map(function(t) {
+      return { label:t.label, fpy:getRightmostFpy(t.id)||'—', spec:getSpec(t.id,SPECS[t.id]), ww:latestWW };
     });
-
-    return { kpis: results, latestWW: latestWW };
+    return { kpis:results, latestWW:latestWW };
   });
 }
 
 function renderKpiCards(kpis) {
-  var container = document.getElementById('kpiCards');
-  if (!container) return;
-  container.innerHTML = '';
+  var c = document.getElementById('kpiCards'); if (!c) return;
+  c.innerHTML = '';
   kpis.forEach(function(k) {
-    var val = k.fpy;
-    var num = parseInt(val);
-    var cls = val === '—' ? 'c-gray'
-            : /Investigating/i.test(val) ? 'c-gray'
-            : num >= 97 ? 'c-green'
-            : num >= 90 ? 'c-amber'
-            : 'c-red';
-    var card = document.createElement('div');
-    card.className = 'kpi-card';
-    card.innerHTML =
-      '<div class="kpi-lbl">' + k.label + '</div>' +
-      '<div class="kpi-val ' + cls + '">' + val + '</div>' +
-      '<div class="kpi-foot">' + k.ww + ' — Spec ' + k.spec + '</div>';
-    container.appendChild(card);
+    var n = parseInt(k.fpy);
+    var cls = k.fpy==='—'||/Invest/i.test(k.fpy) ? 'c-gray' : n>=97?'c-green':n>=90?'c-amber':'c-red';
+    var d = document.createElement('div'); d.className = 'kpi-card';
+    d.innerHTML = '<div class="kpi-lbl">'+k.label+'</div><div class="kpi-val '+cls+'">'+k.fpy+'</div><div class="kpi-foot">'+k.ww+' — Spec '+k.spec+'</div>';
+    c.appendChild(d);
   });
 }
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    SLIDE TITLE EXTRACTOR
-   Reads each slide's XML to pull its first meaningful
-   text as a display title for fig-nav grouping.
-════════════════════════════════════════════════════ */
-function extractSlideTitle(slideXml) {
-  // Try <p:sp> title placeholder first (idx=0 or type="title")
-  var titlePH = slideXml.match(/<p:ph\s[^>]*(?:type="title"|idx="0")[^>]*\/>/);
-  if (titlePH) {
-    var spBlock = slideXml.slice(0, slideXml.indexOf(titlePH[0]) + titlePH[0].length + 500);
-    var tMatch = spBlock.match(/<a:t>([^<]{4,})<\/a:t>/);
-    if (tMatch) return tMatch[1].trim();
-  }
-  // Fallback: first text run longer than 5 chars
-  var allT = slideXml.match(/<a:t>([^<]{5,})<\/a:t>/g) || [];
+═══════════════════════════════════════════════════ */
+function extractSlideTitle(xml) {
+  var allT = xml.match(/<a:t>([^<]{5,})<\/a:t>/g) || [];
   if (allT.length) return allT[0].replace(/<a:t>|<\/a:t>/g,'').trim();
   return '';
 }
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    FIG NAV BUILDER
-   Groups slides into sections using their titles.
-   A new "Fig" section starts whenever the slide title
-   changes significantly vs the previous slide.
-   We use a simple heuristic: compare the first
-   meaningful word-group (≤6 words) of the title.
-════════════════════════════════════════════════════ */
-function buildFigGroups(slideTitles) {
-  // slideTitles[0] = slide 2 title, slideTitles[1] = slide 3 title, etc.
-  var groups = [];
-  var prevKey = null;
-
-  slideTitles.forEach(function(title, i) {
-    // Normalise: lowercase, strip trailing date fragments like "WW24", ", WW24-WW26"
-    var norm = title.toLowerCase()
-      .replace(/,?\s*(ww\d+(\.\d+)?(-ww\d+)?|ww\d+)\s*$/i, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Shorten to first 5 words for comparison
-    var key = norm.split(' ').slice(0, 5).join(' ');
-
+═══════════════════════════════════════════════════ */
+function buildFigGroups(titles) {
+  var groups = [], prevKey = null;
+  titles.forEach(function(title, i) {
+    var norm = title.toLowerCase().replace(/,?\s*(ww[\d.]+(-ww[\d.]+)?)\s*$/i,'').replace(/\s+/g,' ').trim();
+    var key  = norm.split(' ').slice(0,5).join(' ');
     if (key !== prevKey) {
-      // Derive a clean display label from original title
-      var label = title
-        .replace(/,?\s*WW[\d.\-]+\s*$/i, '')
-        .replace(/SUNPOWER DIRECT\s*/i, '')
-        .trim()
-        .replace(/^(FPY|FDC|SCV|M1|M2|M3|S\d+)\s*/i, function(m){ return m; })
-        .slice(0, 38);
-      groups.push({ label: label, startIdx: i });
+      var label = title.replace(/,?\s*WW[\d.\-]+\s*$/i,'').replace(/SUNPOWER DIRECT\s*/i,'').trim().slice(0,38);
+      groups.push({ label:label, startIdx:i });
       prevKey = key;
     }
   });
@@ -411,430 +598,291 @@ function buildFigGroups(slideTitles) {
 }
 
 function renderFigNav() {
-  var nav = document.getElementById('figNav');
-  if (!nav) return;
+  var nav = document.getElementById('figNav'); if (!nav) return;
   nav.innerHTML = '';
   figGroups.forEach(function(g, gi) {
     var btn = document.createElement('button');
     btn.className = 'fig-pill';
-    btn.textContent = 'Fig ' + (gi + 1) + ' — ' + g.label;
+    btn.textContent = 'Fig '+(gi+1)+' — '+g.label;
     btn.title = g.label;
     btn.setAttribute('data-gi', gi);
-    btn.onclick = (function(idx){ return function(){ goTo(idx, true); if(playing) resetAuto(); }; })(g.startIdx);
+    btn.onclick = (function(idx){ return function(){ goTo(idx,true); if(playing) resetAuto(); }; })(g.startIdx);
     nav.appendChild(btn);
   });
   syncFigNav();
 }
 
 function syncFigNav() {
-  var pills = document.querySelectorAll('.fig-pill');
-  if (!pills.length) return;
-  var activeGi = 0;
-  for (var gi = 0; gi < figGroups.length; gi++) {
-    var nextStart = (gi + 1 < figGroups.length) ? figGroups[gi + 1].startIdx : Infinity;
-    if (cur >= figGroups[gi].startIdx && cur < nextStart) { activeGi = gi; }
+  var pills = document.querySelectorAll('.fig-pill'); if (!pills.length) return;
+  var ai = 0;
+  for (var gi=0; gi<figGroups.length; gi++) {
+    var ns = gi+1<figGroups.length ? figGroups[gi+1].startIdx : Infinity;
+    if (cur>=figGroups[gi].startIdx && cur<ns) ai=gi;
   }
-  pills.forEach(function(p, i){ p.classList.toggle('on', i === activeGi); });
+  pills.forEach(function(p,i){ p.classList.toggle('on',i===ai); });
 }
 
-/* ════════════════════════════════════════════════════
-   PPTX PARSER (JSZip)
-   Full pipeline: slide order → slide 2 KPIs →
-   slide titles for fig nav → image extraction
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   PPTX PARSER
+═══════════════════════════════════════════════════ */
 function parsePptx(file) {
+  _loadedPptxBlob = file;
+  _loadedPptxName = file.name;
   document.getElementById('fname').textContent = file.name;
-  clearErr(); setLoading(true, 'Reading ' + file.name + '…');
+  clearErr(); setLoading(true, 'Reading '+file.name+'…');
 
-  var _zip; // keep reference for later steps
-
+  var _zip;
   JSZip.loadAsync(file).then(function(zip) {
     _zip = zip;
-    // ── Resolve slide order ──
     return zip.file('ppt/presentation.xml').async('text').then(function(presXml) {
       var sldBlock = presXml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/);
-      var rIds = sldBlock
-        ? (sldBlock[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); })
-        : [];
+      var rIds = sldBlock ? (sldBlock[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); }) : [];
       return zip.file('ppt/_rels/presentation.xml.rels').async('text').then(function(rXml) {
-        var map = {};
-        var re = /Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
-        while((m=re.exec(rXml))) {
-          if(m[2].indexOf('slides/slide')!==-1)
-            map[m[1]] = 'ppt/' + m[2].replace(/^\.\.\//,'');
-        }
+        var map = {}; var re=/Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
+        while((m=re.exec(rXml))) if(m[2].indexOf('slides/slide')!==-1) map[m[1]]='ppt/'+m[2].replace(/^\.\.\//,'');
         var ordered = rIds.filter(function(id){ return map[id]; }).map(function(id){ return map[id]; });
-        if(!ordered.length) {
-          ordered = Object.keys(zip.files)
-            .filter(function(n){ return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
-            .sort(function(a,b){ return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]); });
-        }
+        if(!ordered.length) ordered=Object.keys(zip.files).filter(function(n){ return /^ppt\/slides\/slide\d+\.xml$/.test(n); }).sort(function(a,b){ return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]); });
         return ordered;
       });
     });
   }).then(function(ordered) {
-    // ── Slide 2 KPI parse (index 1 = second slide = process map) ──
-    var slide2path = ordered.length >= 2 ? ordered[1] : null;
-    var kpiPromise = slide2path
-      ? parseSlide2(_zip, slide2path).then(function(result) {
-          if (result && result.kpis) {
-            renderKpiCards(result.kpis);
-            document.getElementById('kpiWW').textContent = 'Data through ' + result.latestWW + ' 2026';
-          }
-        }).catch(function(e){ console.warn('KPI parse error:', e); })
-      : Promise.resolve();
-
-    // ── Extract slide titles for all slides (skip slide 1) ──
-    var titleSlides = ordered.slice(1); // slide 2 onwards
-    var titlePromises = titleSlides.map(function(sp) {
-      return _zip.file(sp).async('text').then(function(xml){ return extractSlideTitle(xml); })
-               .catch(function(){ return ''; });
-    });
-
-    setLoading(true, 'Extracting ' + titleSlides.length + ' slides…');
-
-    return Promise.all([kpiPromise, Promise.all(titlePromises)]).then(function(res) {
-      return { ordered: ordered, titles: res[1] };
-    });
+    var slide2path = ordered.length>=2 ? ordered[1] : null;
+    var kpiP = slide2path ? parseSlide2(_zip, slide2path).then(function(r){ if(r&&r.kpis) renderKpiCards(r.kpis); }).catch(function(e){ console.warn(e); }) : Promise.resolve();
+    var titleSlides = ordered.slice(1);
+    setLoading(true,'Extracting '+titleSlides.length+' slides…');
+    var titlePs = titleSlides.map(function(sp){ return _zip.file(sp).async('text').then(function(x){ return extractSlideTitle(x); }).catch(function(){ return ''; }); });
+    return Promise.all([kpiP,Promise.all(titlePs)]).then(function(res){ return {ordered:ordered,titles:res[1]}; });
   }).then(function(obj) {
-    var ordered = obj.ordered;
-    var titles  = obj.titles;
-
-    // ── Build fig groups from titles ──
-    figGroups = buildFigGroups(titles);
-
-    // ── Extract images: skip slide 1 (index 0), use slides 2+ ──
-    var targets = ordered.slice(1);
-    var imgPromises = targets.map(function(sp, i) {
-      var slideNum = i + 2;
-      var sf = sp.split('/').pop();
-      var rp = 'ppt/slides/_rels/' + sf + '.rels';
-      var relsFile = _zip.file(rp);
-      if (!relsFile) return Promise.resolve(null);
-      return relsFile.async('text').then(function(rXml) {
-        var imgRe = /Type="[^"]*\/image"[^>]*Target="([^"]+)"/g, m, imgs=[];
-        while((m=imgRe.exec(rXml))) imgs.push('ppt/'+m[1].replace(/^\.\.\//,''));
-        var pref = imgs.filter(function(p){ return /\.(png|jpg|jpeg)$/i.test(p); });
-        var gif  = imgs.filter(function(p){ return /\.gif$/i.test(p); });
-        var emf  = imgs.filter(function(p){ return /\.emf$/i.test(p); });
-        var chosen = pref.length?pref[0]:gif.length?gif[0]:emf.length?emf[0]:null;
+    figGroups = buildFigGroups(obj.titles);
+    var targets = obj.ordered.slice(1);
+    var imgPs = targets.map(function(sp,i) {
+      var slideNum=i+2, sf=sp.split('/').pop(), rp='ppt/slides/_rels/'+sf+'.rels';
+      var rf=_zip.file(rp); if(!rf) return Promise.resolve(null);
+      return rf.async('text').then(function(rXml){
+        var imgRe=/Type="[^"]*\/image"[^>]*Target="([^"]+)"/g, m2, imgs=[];
+        while((m2=imgRe.exec(rXml))) imgs.push('ppt/'+m2[1].replace(/^\.\.\//,''));
+        var pref=imgs.filter(function(p){ return /\.(png|jpg|jpeg)$/i.test(p); });
+        var gif=imgs.filter(function(p){ return /\.gif$/i.test(p); });
+        var emf=imgs.filter(function(p){ return /\.emf$/i.test(p); });
+        var chosen=pref.length?pref[0]:gif.length?gif[0]:emf.length?emf[0]:null;
         if(!chosen) return Promise.resolve(null);
-        var imgFile = _zip.file(chosen);
-        if(!imgFile) return Promise.resolve(null);
-        return imgFile.async('blob').then(function(b) {
+        var imgFile=_zip.file(chosen); if(!imgFile) return Promise.resolve(null);
+        return imgFile.async('blob').then(function(b){
           var ext=chosen.split('.').pop().toLowerCase();
           var mime=ext==='png'?'image/png':ext==='gif'?'image/gif':ext==='emf'?'image/x-emf':'image/jpeg';
-          return { slideNum:slideNum, url:URL.createObjectURL(new Blob([b],{type:mime})), title:titles[i]||('Slide '+slideNum) };
+          var blob=new Blob([b],{type:mime});
+          return {slideNum:slideNum,url:URL.createObjectURL(blob),blob:blob,title:obj.titles[i]||('Slide '+slideNum)};
         });
       }).catch(function(){ return null; });
     });
-
-    return Promise.all(imgPromises);
+    return Promise.all(imgPs);
   }).then(function(results) {
-    var valid = results.filter(Boolean).filter(function(s){ return s.url; });
-    // If too few raster images (chart-heavy deck), fall back to media scan
-    if (valid.length < results.length * 0.4) {
-      return _zip.file('ppt/presentation.xml').async('text').then(function() {
-        var media = Object.keys(_zip.files)
-          .filter(function(n){ return /^ppt\/media\/.*\.(png|jpg|jpeg|gif)$/i.test(n); })
-          .sort(function(a,b){ return a.localeCompare(b,undefined,{numeric:true}); });
+    var valid=results.filter(Boolean).filter(function(s){ return s.url; });
+    if(valid.length < results.length*0.4){
+      return _zip.file('ppt/presentation.xml').async('text').then(function(){
+        var media=Object.keys(_zip.files).filter(function(n){ return /^ppt\/media\/.*\.(png|jpg|jpeg|gif)$/i.test(n); }).sort(function(a,b){ return a.localeCompare(b,undefined,{numeric:true}); });
         return Promise.all(media.map(function(p,i){
           return _zip.file(p).async('blob').then(function(b){
-            var ext=p.split('.').pop().toLowerCase();
-            var mime=ext==='png'?'image/png':ext==='gif'?'image/gif':'image/jpeg';
-            return {slideNum:i+2, url:URL.createObjectURL(new Blob([b],{type:mime})), title:'Slide '+(i+2)};
+            var ext=p.split('.').pop().toLowerCase(), mime=ext==='png'?'image/png':ext==='gif'?'image/gif':'image/jpeg';
+            var blob=new Blob([b],{type:mime});
+            return {slideNum:i+2,url:URL.createObjectURL(blob),blob:blob,title:'Slide '+(i+2)};
           });
         }));
       });
     }
     return valid;
   }).then(function(final) {
-    slides = (final||[]).filter(Boolean).filter(function(s){ return s.url; });
-    if(!slides.length) {
-      setLoading(false);
-      showErr('No renderable images found in this PPTX.\n\nThis deck uses embedded Excel charts.\nFor reliable display, export slides as JPGs into the slides/ folder (see README).');
-      return;
-    }
-    document.getElementById('tbSub').textContent = 'WW26 2026 · ' + slides.length + ' slides';
-    setLoading(false);
-    buildThumbs();
-    renderFigNav();
-    goTo(0, false);
+    slides=(final||[]).filter(Boolean).filter(function(s){ return s.url; });
+    if(!slides.length){ setLoading(false); showErr('No renderable slide images found.\n\nSee README for instructions on exporting slides as JPGs.'); return; }
+    document.getElementById('tbSub').textContent = file.name.replace(/\.pptx$/i,'').replace(/_/g,' ')+' · '+slides.length+' slides';
+    setLoading(false); buildThumbs(); renderFigNav(); goTo(0,false);
     document.getElementById('splash').classList.add('hidden');
     document.getElementById('viewer').classList.add('on');
     startPlay();
-  }).catch(function(err){
-    setLoading(false);
-    showErr('Error reading PPTX:\n' + err.message);
-    console.error(err);
-  });
+    // Enable push button and auto-push if GitHub is configured
+    document.getElementById('ghPushBtn').disabled = false;
+    var s = ghSettings();
+    if (s.token && s.user && s.repo) {
+      setTimeout(function(){ pushToGithub(); }, 800);
+    }
+  }).catch(function(err){ setLoading(false); showErr('Error: '+err.message); console.error(err); });
 }
 
-/* ════════════════════════════════════════════════════
-   BUNDLED IMAGE LOADER
-   Primary path: loads slides/slide-NN.jpg files
-   (pre-rendered from PPTX, committed alongside index.html)
-   Dynamically probes up to MAX to handle any slide count.
-   Also extracts KPIs from the PPTX if found alongside.
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   BUNDLED IMAGE LOADER (primary path)
+═══════════════════════════════════════════════════ */
 var PPTX_CANDIDATES = [
   'WW26_CIGNETTI_TURNAROUND_DASHBOARD.pptx',
   'WW25_CIGNETTI_TURNAROUND_DASHBOARD.pptx',
   'CIGNETTI_TURNAROUND_DASHBOARD_2-18.pptx',
-  'dashboard.pptx', 'turnaround.pptx', 'slides.pptx'
+  'dashboard.pptx','turnaround.pptx','slides.pptx'
 ];
 
 function tryBundledSlides() {
-  setLoading(true, 'Loading slides…');
-  var MAX = 60;
-  var loaded = [], pending = MAX - 1; // slides 2..MAX
-
-  for (var n = 2; n <= MAX; n++) {
-    (function(num) {
-      var pad = num < 10 ? '0' + num : '' + num;
-      var url = 'slides/slide-' + pad + '.jpg';
-      var img = new Image();
-      img.onload = function() {
-        loaded.push({ slideNum: num, url: url, title: 'Slide ' + num });
-        tick();
-      };
-      img.onerror = function() { tick(); };
-      img.src = url;
+  setLoading(true,'Loading slides…');
+  var MAX=60, loaded=[], pending=MAX-1;
+  for(var n=2;n<=MAX;n++){
+    (function(num){
+      var pad=num<10?'0'+num:''+num, url='slides/slide-'+pad+'.jpg';
+      var img=new Image();
+      img.onload=function(){ loaded.push({slideNum:num,url:url,blob:null,title:'Slide '+num}); tick(); };
+      img.onerror=function(){ tick(); };
+      img.src=url;
     })(n);
   }
-
-  function tick() {
+  function tick(){
     pending--;
-    if (pending > 0) return;
-    loaded.sort(function(a,b){ return a.slideNum - b.slideNum; });
-
-    if (loaded.length < 2) {
-      // No bundled images — try auto-fetching the PPTX
-      setLoading(false);
-      tryPptxAuto();
-      return;
-    }
-
-    slides = loaded;
-    document.getElementById('tbSub').textContent = loaded.length + ' slides';
-    setLoading(false);
-    buildThumbs();
-
-    // Now try to load PPTX in background to parse KPIs + titles
+    if(pending>0) return;
+    loaded.sort(function(a,b){ return a.slideNum-b.slideNum; });
+    if(loaded.length<2){ setLoading(false); tryPptxAuto(); return; }
+    slides=loaded;
+    document.getElementById('tbSub').textContent=loaded.length+' slides';
+    setLoading(false); buildThumbs();
     loadPptxForKpis();
   }
 }
 
-function loadPptxForKpis() {
-  // Silently try to fetch the PPTX and parse slide 2 + titles for fig nav
-  function tryNext(i) {
-    if (i >= PPTX_CANDIDATES.length) {
-      // Can't parse — show default fig nav from slide numbers
-      buildFigGroupsFromSlides();
-      renderFigNav();
-      goTo(0, false);
-      document.getElementById('splash').classList.add('hidden');
-      document.getElementById('viewer').classList.add('on');
-      startPlay();
-      return;
-    }
-    fetch(PPTX_CANDIDATES[i], {method:'HEAD'})
-      .then(function(r) {
-        if (!r.ok) { tryNext(i+1); return; }
-        fetch(PPTX_CANDIDATES[i]).then(function(res){ return res.blob(); }).then(function(blob) {
-          var name = PPTX_CANDIDATES[i];
-          document.getElementById('fname').textContent = name;
-          document.getElementById('tbSub').textContent = name.replace(/\.pptx$/i,'').replace(/_/g,' ') + ' · ' + slides.length + ' slides';
-          JSZip.loadAsync(blob).then(function(zip) {
-            // Resolve slide order for title extraction
-            return zip.file('ppt/presentation.xml').async('text').then(function(presXml) {
-              var sldBlock = presXml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/);
-              var rIds = sldBlock
-                ? (sldBlock[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); })
-                : [];
-              return zip.file('ppt/_rels/presentation.xml.rels').async('text').then(function(rXml) {
-                var map = {};
-                var re = /Id="(rId\d+)"[^>]*Target="([^"]+)"/g, m;
-                while((m=re.exec(rXml))) {
-                  if(m[2].indexOf('slides/slide')!==-1)
-                    map[m[1]] = 'ppt/' + m[2].replace(/^\.\.\//,'');
-                }
-                var ordered = rIds.filter(function(id){ return map[id]; }).map(function(id){ return map[id]; });
-                return ordered;
-              });
+function loadPptxForKpis(){
+  function tryNext(i){
+    if(i>=PPTX_CANDIDATES.length){ buildFigGroupsFromSlides(); renderFigNav(); goTo(0,false); document.getElementById('splash').classList.add('hidden'); document.getElementById('viewer').classList.add('on'); startPlay(); return; }
+    fetch(PPTX_CANDIDATES[i],{method:'HEAD'}).then(function(r){
+      if(!r.ok){ tryNext(i+1); return; }
+      var name=PPTX_CANDIDATES[i];
+      _loadedPptxName=name;
+      fetch(name).then(function(res){ return res.blob(); }).then(function(blob){
+        _loadedPptxBlob=blob;
+        document.getElementById('fname').textContent=name;
+        document.getElementById('tbSub').textContent=name.replace(/\.pptx$/i,'').replace(/_/g,' ')+' · '+slides.length+' slides';
+        document.getElementById('ghPushBtn').disabled=false;
+        JSZip.loadAsync(blob).then(function(zip){
+          return zip.file('ppt/presentation.xml').async('text').then(function(presXml){
+            var sldBlock=presXml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/);
+            var rIds=sldBlock?(sldBlock[1].match(/r:id="(rId\d+)"/g)||[]).map(function(m){ return m.replace(/r:id="|"/g,''); }):[];
+            return zip.file('ppt/_rels/presentation.xml.rels').async('text').then(function(rXml){
+              var map={},re=/Id="(rId\d+)"[^>]*Target="([^"]+)"/g,m;
+              while((m=re.exec(rXml))) if(m[2].indexOf('slides/slide')!==-1) map[m[1]]='ppt/'+m[2].replace(/^\.\.\//,'');
+              return rIds.filter(function(id){ return map[id]; }).map(function(id){ return map[id]; });
             });
-          }).then(function(ordered) {
-            // Parse slide 2 KPIs
-            var slide2path = ordered.length >= 2 ? ordered[1] : null;
-            var kpiP = slide2path
-              ? parseSlide2(zip, slide2path).then(function(res) {
-                  if (res && res.kpis) {
-                    renderKpiCards(res.kpis);
-                    document.getElementById('kpiWW').textContent = 'Data through ' + res.latestWW + ' 2026';
-                  }
-                }).catch(function(e){ console.warn('KPI parse fail:', e); })
+          });
+        }).then(function(ordered){
+          // Re-open zip with the same blob to get a fresh ZipObject in scope
+          return JSZip.loadAsync(blob).then(function(zip2){
+            var slide2p = ordered.length >= 2 ? ordered[1] : null;
+            var kP = slide2p
+              ? parseSlide2(zip2, slide2p).then(function(r){ if(r&&r.kpis) renderKpiCards(r.kpis); }).catch(function(e){ console.warn('KPI parse:',e); })
               : Promise.resolve();
-
-            // Extract titles for slides 2+
-            var titleSlides = ordered.slice(1);
-            var titlePs = titleSlides.map(function(sp) {
-              return zip.file(sp).async('text').then(function(xml){ return extractSlideTitle(xml); }).catch(function(){ return ''; });
+            var tPs = ordered.slice(1).map(function(sp){
+              return zip2.file(sp)
+                ? zip2.file(sp).async('text').then(function(x){ return extractSlideTitle(x); }).catch(function(){ return ''; })
+                : Promise.resolve('');
             });
-
-            return Promise.all([kpiP, Promise.all(titlePs)]).then(function(res) {
+            return Promise.all([kP, Promise.all(tPs)]).then(function(res){
               var titles = res[1];
-              // Update slide titles in state
-              slides.forEach(function(s, i) { if (titles[i]) s.title = titles[i]; });
+              slides.forEach(function(s, i){ if(titles[i]) s.title = titles[i]; });
               figGroups = buildFigGroups(titles);
-              renderFigNav();
-              goTo(0, false);
+              renderFigNav(); goTo(0, false);
               document.getElementById('splash').classList.add('hidden');
               document.getElementById('viewer').classList.add('on');
               startPlay();
             });
-          }).catch(function(e){ console.warn('PPTX parse fail:', e); fallbackStart(); });
-        }).catch(function(){ tryNext(i+1); });
-      }).catch(function(){ tryNext(i+1); });
-  }
-  tryNext(0);
-}
-
-function buildFigGroupsFromSlides() {
-  // When PPTX not available, create one group per slide
-  figGroups = slides.map(function(s, i) {
-    return { label: 'Slide ' + s.slideNum, startIdx: i };
-  });
-}
-
-function fallbackStart() {
-  buildFigGroupsFromSlides();
-  renderFigNav();
-  goTo(0, false);
-  document.getElementById('splash').classList.add('hidden');
-  document.getElementById('viewer').classList.add('on');
-  startPlay();
-}
-
-/* ════════════════════════════════════════════════════
-   PPTX AUTO-FETCH (when no bundled images found)
-════════════════════════════════════════════════════ */
-function tryPptxAuto() {
-  setLoading(true, 'Looking for .pptx in folder…');
-  function tryNext(i) {
-    if (i >= PPTX_CANDIDATES.length) {
-      setLoading(false);
-      document.getElementById('splashSub').innerHTML =
-        'No slides found automatically.<br>Drop a <strong>.pptx</strong> here or click Browse.';
-      return;
-    }
-    fetch(PPTX_CANDIDATES[i], {method:'HEAD'}).then(function(r){
-      if (!r.ok) { tryNext(i+1); return; }
-      var name = PPTX_CANDIDATES[i];
-      setLoading(true, 'Loading ' + name + '…');
-      fetch(name).then(function(res){ return res.blob(); }).then(function(b){
-        parsePptx(new File([b], name, {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}));
+          });
+        }).catch(function(e){ console.warn('PPTX KPI load:', e); fallbackStart(); });
       }).catch(function(){ tryNext(i+1); });
     }).catch(function(){ tryNext(i+1); });
   }
   tryNext(0);
 }
 
-/* ════════════════════════════════════════════════════
-   FILE INPUT / DRAG-DROP
-════════════════════════════════════════════════════ */
-document.getElementById('fileInput').addEventListener('change', function(e) {
-  var f = e.target.files[0]; if(f) parsePptx(f); this.value='';
-});
-var mainEl = document.getElementById('main');
-var dropBox = document.getElementById('dropBox');
-mainEl.addEventListener('dragover',  function(e){ e.preventDefault(); dropBox.classList.add('drag'); });
-mainEl.addEventListener('dragleave', function(){ dropBox.classList.remove('drag'); });
-mainEl.addEventListener('drop', function(e){
-  e.preventDefault(); dropBox.classList.remove('drag');
-  var f = e.dataTransfer.files[0];
-  if (f && /\.pptx$/i.test(f.name)) parsePptx(f);
-  else showErr('Please drop a .pptx file.');
-});
+function buildFigGroupsFromSlides(){ figGroups=slides.map(function(s,i){ return {label:'Slide '+s.slideNum,startIdx:i}; }); }
+function fallbackStart(){ buildFigGroupsFromSlides(); renderFigNav(); goTo(0,false); document.getElementById('splash').classList.add('hidden'); document.getElementById('viewer').classList.add('on'); startPlay(); }
 
-/* ════════════════════════════════════════════════════
+function tryPptxAuto(){
+  setLoading(true,'Looking for .pptx in folder…');
+  function tryNext(i){
+    if(i>=PPTX_CANDIDATES.length){ setLoading(false); document.getElementById('splashSub').innerHTML='No slides found.<br>Drop a <strong>.pptx</strong> here or click Browse.'; return; }
+    fetch(PPTX_CANDIDATES[i],{method:'HEAD'}).then(function(r){
+      if(!r.ok){ tryNext(i+1); return; }
+      var name=PPTX_CANDIDATES[i]; setLoading(true,'Loading '+name+'…');
+      fetch(name).then(function(res){ return res.blob(); }).then(function(b){
+        parsePptx(new File([b],name,{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}));
+      }).catch(function(){ tryNext(i+1); });
+    }).catch(function(){ tryNext(i+1); });
+  }
+  tryNext(0);
+}
+
+/* ═══════════════════════════════════════════════════
+   FILE INPUT / DRAG-DROP
+═══════════════════════════════════════════════════ */
+document.getElementById('fileInput').addEventListener('change',function(e){ var f=e.target.files[0]; if(f)parsePptx(f); this.value=''; });
+var mainEl=document.getElementById('main'), dropBox2=document.getElementById('dropBox');
+mainEl.addEventListener('dragover',function(e){ e.preventDefault(); dropBox2.classList.add('drag'); });
+mainEl.addEventListener('dragleave',function(){ dropBox2.classList.remove('drag'); });
+mainEl.addEventListener('drop',function(e){ e.preventDefault(); dropBox2.classList.remove('drag'); var f=e.dataTransfer.files[0]; if(f&&/\.pptx$/i.test(f.name))parsePptx(f); else showErr('Please drop a .pptx file.'); });
+
+/* ═══════════════════════════════════════════════════
    RENDER ENGINE
-════════════════════════════════════════════════════ */
-function buildThumbs() {
-  var strip = document.getElementById('thumbs');
-  strip.innerHTML = '';
-  slides.forEach(function(s, i) {
-    var d = document.createElement('div');
-    d.className = 'thumb' + (i===0?' on':'');
-    d.title = s.title || ('Slide ' + s.slideNum);
-    d.onclick = (function(idx){ return function(){ goTo(idx,true); if(playing) resetAuto(); }; })(i);
-    var img = document.createElement('img'); img.src = s.url; img.alt = d.title; img.loading='lazy';
-    var num = document.createElement('div'); num.className='thumb-n'; num.textContent = s.slideNum;
-    d.appendChild(img); d.appendChild(num);
-    strip.appendChild(d);
+═══════════════════════════════════════════════════ */
+function buildThumbs(){
+  var strip=document.getElementById('thumbs'); strip.innerHTML='';
+  slides.forEach(function(s,i){
+    var d=document.createElement('div'); d.className='thumb'+(i===0?' on':''); d.title=s.title||('Slide '+s.slideNum);
+    d.onclick=(function(idx){ return function(){ goTo(idx,true); if(playing)resetAuto(); }; })(i);
+    var img=document.createElement('img'); img.src=s.url; img.alt=d.title; img.loading='lazy';
+    var num=document.createElement('div'); num.className='thumb-n'; num.textContent=s.slideNum;
+    d.appendChild(img); d.appendChild(num); strip.appendChild(d);
   });
 }
-
-function goTo(idx, animate) {
-  if (!slides.length) return;
-  cur = ((idx % slides.length) + slides.length) % slides.length;
-  var img = document.getElementById('sImg');
-  if (animate) {
-    img.classList.add('fade');
-    setTimeout(function(){ _apply(img); img.classList.remove('fade'); }, 220);
-  } else { _apply(img); }
+function goTo(idx,animate){
+  if(!slides.length)return;
+  cur=((idx%slides.length)+slides.length)%slides.length;
+  var img=document.getElementById('sImg');
+  if(animate){ img.classList.add('fade'); setTimeout(function(){ _apply(img); img.classList.remove('fade'); },220); }
+  else _apply(img);
 }
-function _apply(img) {
-  var s = slides[cur];
-  img.src = s.url; img.alt = s.title || '';
-  document.getElementById('sc').textContent = (cur+1)+' / '+slides.length;
-  var pct = slides.length>1?(cur/(slides.length-1))*100:100;
-  document.getElementById('prog').style.width = pct+'%';
+function _apply(img){
+  var s=slides[cur]; img.src=s.url; img.alt=s.title||'';
+  document.getElementById('sc').textContent=(cur+1)+' / '+slides.length;
+  var pct=slides.length>1?(cur/(slides.length-1))*100:100;
+  document.getElementById('prog').style.width=pct+'%';
   document.querySelectorAll('.thumb').forEach(function(t,i){ t.classList.toggle('on',i===cur); });
-  var at = document.querySelector('.thumb.on');
-  if (at) at.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  var at=document.querySelector('.thumb.on'); if(at)at.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   syncFigNav();
 }
-function nxt()  { goTo(cur+1,true); if(playing) resetAuto(); }
-function prev() { goTo(cur-1,true); if(playing) resetAuto(); }
+function nxt() { goTo(cur+1,true); if(playing)resetAuto(); }
+function prev(){ goTo(cur-1,true); if(playing)resetAuto(); }
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    PLAYBACK
-════════════════════════════════════════════════════ */
-function startPlay()  { playing=true;  updatePlayBtn(); resetAuto(); }
-function togglePlay() { playing=!playing; updatePlayBtn(); playing?resetAuto():(clearInterval(timer),timer=null); }
-function resetAuto()  { clearInterval(timer); timer=setInterval(function(){ goTo(cur+1,true); }, parseInt(document.getElementById('spd').value)); }
-function updatePlayBtn() {
-  var ico=document.getElementById('playIco'), lbl=document.getElementById('playLbl'), btn=document.getElementById('playBtn');
+═══════════════════════════════════════════════════ */
+function startPlay() { playing=true; updatePlayBtn(); resetAuto(); }
+function togglePlay(){ playing=!playing; updatePlayBtn(); playing?resetAuto():(clearInterval(timer),timer=null); }
+function resetAuto() { clearInterval(timer); timer=setInterval(function(){ goTo(cur+1,true); },parseInt(document.getElementById('spd').value)); }
+function updatePlayBtn(){
+  var ico=document.getElementById('playIco'),lbl=document.getElementById('playLbl'),btn=document.getElementById('playBtn');
   if(playing){ ico.innerHTML='<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; lbl.textContent='Pause'; btn.classList.add('paused'); }
   else        { ico.innerHTML='<path d="M8 5v14l11-7z"/>'; lbl.textContent='Play'; btn.classList.remove('paused'); }
 }
-document.getElementById('spd').addEventListener('change', function(){ if(playing) resetAuto(); });
+document.getElementById('spd').addEventListener('change',function(){ if(playing)resetAuto(); });
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    UI HELPERS
-════════════════════════════════════════════════════ */
-function setLoading(on, msg) {
-  document.getElementById('barWrap').classList.toggle('on', on);
-  var lm=document.getElementById('loadMsg'); lm.classList.toggle('on', on&&!!msg); if(msg) lm.textContent=msg;
-}
+═══════════════════════════════════════════════════ */
+function setLoading(on,msg){ document.getElementById('barWrap').classList.toggle('on',on); var lm=document.getElementById('loadMsg'); lm.classList.toggle('on',on&&!!msg); if(msg)lm.textContent=msg; }
 function showErr(msg){ var e=document.getElementById('errMsg'); e.textContent=msg; e.classList.add('on'); }
-function clearErr()  { document.getElementById('errMsg').classList.remove('on'); }
-function toggleFS()  { document.fullscreenElement?document.exitFullscreen():(document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()); }
-
-/* ════════════════════════════════════════════════════
-   KEYBOARD
-════════════════════════════════════════════════════ */
-document.addEventListener('keydown', function(e) {
-  if(!slides.length) return;
-  if(e.key==='ArrowRight'||e.key==='ArrowDown') nxt();
-  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') prev();
+function clearErr(){ document.getElementById('errMsg').classList.remove('on'); }
+function toggleFS(){ document.fullscreenElement?document.exitFullscreen():(document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()); }
+document.addEventListener('keydown',function(e){
+  if(!slides.length)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')nxt();
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp')prev();
   else if(e.key===' '){ e.preventDefault(); togglePlay(); }
-  else if(e.key==='f'||e.key==='F') toggleFS();
+  else if(e.key==='f'||e.key==='F')toggleFS();
 });
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    BOOT
-════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 tryBundledSlides();
 </script>
 </body>
